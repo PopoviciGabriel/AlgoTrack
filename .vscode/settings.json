@@ -4,7 +4,10 @@
         "**/.svn": true,
         "**/.hg": true,
         "**/.DS_Store": true,
-        "**/Thumbs.db": true
+        "**/Thumbs.db": true,
+        "v1.0/algotrack.exe": true
     },
-    "hide-files.files": []
+    "hide-files.files": [
+        "v1.0/algotrack.exe"
+    ]
 }
