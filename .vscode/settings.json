@@ -5,9 +5,11 @@
         "**/.hg": true,
         "**/.DS_Store": true,
         "**/Thumbs.db": true,
-        "v1.0/algotrack.exe": true
+        "v1.0/algotrack.exe": true,
+        "v2.0/algotrack.exe": true
     },
     "hide-files.files": [
-        "v1.0/algotrack.exe"
+        "v1.0/algotrack.exe",
+        "v2.0/algotrack.exe"
     ]
 }
