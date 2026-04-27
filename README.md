@@ -1,76 +1,104 @@
 # AlgoTrack
 
-AlgoTrack is a console application that helps you track your programming problems monitor your progress and analyze how you are doing over time. It is written in C++20.
-
-I built this project for myself to help me keep track of my problems and to get better at writing organized code. I also wanted to practice designing software that's easy to use and understand.
-
----
+> A modern C++ console application for tracking and analyzing solved problems.
 
 ## Features
 
-* You can add, update and delete problems
+* Fuzzy search (Levenshtein distance)
 
-* You can search for problems using a kind of search that finds similar words
+* CSV persistence (import/export support)
 
-* You can filter problems by:
+* Statistics dashboard
 
-* how hard they are (Easy, Medium, Hard)
+* Total problems
 
-* what is happening with them (Solved, Failed In Progress)
+* Status distribution (Solved / Failed / In Progress)
 
-* where they are from and what they are about
+* Difficulty breakdown
 
-* You can. Export your data to and from files
+* time & rating
 
-* AlgoTrack has a built-in system to track your progress and statistics
+* Most used tags
 
-* It makes sure that all the information you enter is correct and makes sense
+* Tag & platform filtering
 
----
+* Update system (status & notes)
+
+* Sorting
+
+* By difficulty
+
+* By time spent
+
+* By rating (descending)
+
+* logic/UI separation
+
+* Built with C++ (C++17)
 
 ## Project Structure
 
-* `Problem` files handle the information about each problem. Make sure it is correct
+```
 
-* `ProblemManager` files do the work of adding, deleting, searching and filtering problems
+AlgoTrack/
 
-* `ProblemRepository` files take care of saving and loading your data to and from files
+│
 
-* `Statistics` files. Show you information about your progress
+├── src/
 
-* `Fuzzy` files do the kind of search that finds similar words
+│   ├── Problem.*            # core entity
 
-* `ConsoleUI` files handle all the interaction between you and the application
+│   ├── ProblemManager.*    # business logic
 
-* `Utils` files have helpful functions for working with strings, files and dates
+│   ├── ProblemRepository.*# file handling (CSV)
 
----
+│   ├── Statistics.*       # analytics engine
 
-## Tech Stack
+│   ├── Fuzzy.*            # fuzzy search (Levenshtein)
 
-* C++20 is the programming language used
+│   ├── Utils.*            # helpers
 
-* Object-Oriented Programming is used to make the code organized and easy to understand
+│   ├── ConsoleUI.*        # user interface
 
-* The application is designed to have parts for different tasks
+│   └── main.cpp
 
-* Files are used to save and load your data
+│
 
-* A custom search function is used to find words
+├── data/
 
----
+│   └── problems.example.csv
 
-## How to Run
+│
 
-### Compile:
+├── CMakeLists.txt
 
-```bash
-
-g++ -std=c++20 main.cpp Problem.cpp ProblemManager.cpp ProblemRepository.cpp Statistics.cpp Fuzzy.cpp Utils.cpp ConsoleUI.cpp -o AlgoTrack
+└── README.md
 
 ```
 
-### Run:
+## Build & Run
+
+### Requirements
+
+* CMake ≥ 3.16
+
+* C++17 compiler (g++, clang, MSVC)
+
+### Build
+
+```bash
+
+mkdir build
+
+cd build
+
+cmake..
+
+cmake --build.
+
+```
+
+### Run
 
 ```bash
 
@@ -78,52 +106,92 @@ g++ -std=c++20 main.cpp Problem.cpp ProblemManager.cpp ProblemRepository.cpp Sta
 
 ```
 
----
+Windows (PowerShell):
 
-## Example Use Case
+```bash
 
-AlgoTrack helps you to:
+.\AlgoTrack.exe
 
-* keep track of the problems you have solved from places like LeetCode and Codeforces
+```
 
-* see how many problems you have solved and how hard they were
+## CSV Format
 
-* quickly find problems using the special search function
+Each problem is stored as:
 
-* take notes and give ratings to each problem
+```
 
----
+name,platform,difficulty,tags,status,timeSpent,date,rating notes
+
+```
+
+### Example:
+
+```
+
+two sum,easy,arrays|hashmap,solved,10,25-03-2026,5.0,very easy
+
+dijkstra graph,atcoder hard graphs|dijkstra solved,60,26-03-2026,9.0,important problem
+
+```
+
+Notes:
+
+* Tags are separated by `|`
+
+* Date format: `DD-MM-YYYY`
+
+* Rating: `1.0. 10.0`
+
+## Design Highlights
+
+* Strong separation of concerns
+
+* Logic ≠ UI ≠ persistence
+
+* Input validation (exceptions)
+
+* Custom CSV parser (handles quotes & commas)
+
+* Fuzzy matching system for UX
+
+* Modular architecture (easy to extend)
+
+## Example Use Cases
+
+* Track solved problems from platforms like:
+
+* LeetCode
+
+* Codeforces
+
+* AtCoder
+
+* Analyze your progress over time
+
+* Identify areas (difficulty / tags)
 
 ## Future Improvements
 
-* A version with a graphical user interface
+* [ ] GUI version (Qt / ImGui)
 
-* advanced statistics and visualizations
+* [ ] JSON support
 
-* tests to make sure the application works correctly
+* [ ] Charts / visualization
 
-* better ways to filter and sort your problems
+* [ ] Cloud sync
 
-* support for more file formats like JSON
+* [ ] Tag-based recommendations
 
----
+## Author
 
-## Why I Built This
+Built as a project to improve:
 
-I built AlgoTrack to help me track my own progress and to get better at writing C++ code. I wanted to make an application that is useful not just a theoretical exercise.
+* Modern C++
 
-The main goals of this project were:
+* Clean architecture
 
-* to make the code clean and organized
+* Real-world application design
 
-* to separate tasks into different parts
+## If you like it
 
-* to make sure the data is correct and makes sense
-
-* to build something practical and useful
-
----
-
-## Feedback
-
-I would love to hear your thoughts and suggestions. If you have ideas, for features or ways to improve AlgoTrack please let me know.
+Give it a star, on GitHub. It helps a lot!
