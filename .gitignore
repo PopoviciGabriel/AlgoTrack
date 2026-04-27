@@ -1,0 +1,18 @@
+# Build
+build/
+*.exe
+*.o
+*.obj
+*.log
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# VSCode
+.vscode/
+
+# Data (user-specific)
+data/problems.csv

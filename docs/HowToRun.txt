@@ -1,0 +1,71 @@
+=== How to Run AlgoTrack ===
+
+To get AlgoTrack up and running you need a things:
+
+- CMake
+
+- A C++ compiler, which can be GCC or MinGW or MSVC
+
+- VS Code but you do not really need it
+
+----------------------------------------
+
+1. Build the project
+
+First open a terminal in the project root. This is the folder that has CMakeLists.txt in it.
+
+Now you need to make a new folder called build so type:
+
+mkdir build
+
+Then go into that folder:
+
+cd build
+
+Next you need to run these two commands:
+
+cmake..
+
+cmake --build.
+
+----------------------------------------
+
+2. Run the application
+
+Thiss important: you must run the executable from the project root, not from the build folder.
+
+This way AlgoTrack can find the data/problems.csv file.
+
+So from the project root you can run it like this:
+
+.\build\AlgoTrack.exe
+
+Or depending on how you set it up:
+
+.\build\Debug\AlgoTrack.exe
+
+----------------------------------------
+
+3. Data file
+
+All the problems are stored in a file called:
+
+data/problems.csv
+
+If this file does not exist AlgoTrack will start with no data.
+
+----------------------------------------
+
+4. Quick run (after build)
+
+After you have built it once you only need to do one thing:
+
+.\build\AlgoTrack.exe
+
+----------------------------------------
+
+Some things to remember:
+
+- Do not run AlgoTrack from, inside the build folder
+
+- If you do AlgoTrack will not be able to find the data/problems.csv file
