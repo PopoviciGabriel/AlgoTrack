@@ -1,88 +1,88 @@
 # AlgoTrack
 
-AlgoTrack is a C++ application for tracking solved programming problems, analyzing progress, and storing problem history in CSV files.
+AlgoTrack is a C++ program that helps you keep track of the programming problems you have solved. It also helps you see how you are doing and saves your problem history in CSV files.
 
-The project includes two versions:
+The project has two versions:
 
 - Console version
 
 - Qt desktop version
 
-The console version is lightweight and runs in the terminal.
-
-The Qt version provides a desktop graphical interface.
+The console version is simple and works in the terminal. The Qt version has an interface that you can use on your desktop.
 
 ## Download
 
-Go to the GitHub Releases page and download one of the Windows builds:
+To get AlgoTrack go to the GitHub Releases page. Download the file called AlgoTrack for Windows.zip. When you open this file you will see two folders:
 
-- AlgoTrack Qt Desktop App: recommended for most users
+AlgoTrack-qt-windows/
 
-- AlgoTrack Console App: terminal version
+AlgoTrack-console-windows/
 
-After downloading a release ZIP, extract it and run the executable inside.
+Most people will want to use the Qt desktop version.
 
 ## Features
 
-- Add and manage solved problems
+Here are some things AlgoTrack can do:
 
-- CSV persistence
+- Add and manage the problems you have solved
+
+- Save your progress in CSV files
 
 - Import and export CSV files
 
-- Fuzzy search using Levenshtein distance
+- Search for problems using a kind of search called fuzzy search
 
-- Statistics dashboard
+- See statistics about your progress
 
-- Status distribution
+- Track the status of your problems
 
-- Difficulty breakdown
+- See how difficult your problems are
 
-- Time and rating tracking
+- Track how much time you spend on problems and your rating
 
-- Most used tags
+- See which tags you use the most
 
-- Tag and platform filtering
+- Filter your problems by tag and platform
 
-- Update status and notes
+- Update the status and notes of your problems
 
-- Sorting by difficulty, time spent, and rating
+- Sort your problems by difficulty time spent and rating
 
-- Clean separation between core logic, persistence, and UI
+- Keep the different parts of the program separate
 
 ## Requirements
 
-For building from source:
+To build AlgoTrack from source you need:
 
 - CMake 3.16 or newer
 
-- C++17 compiler
+- A C++17 compiler
 
 - Qt 6 for the desktop GUI version
 
-- Ninja recommended on Windows
+- Ninja is recommended on Windows
 
 ## Build Console Version
 
-From the repository root:
+To build the console version do this:
+
+From the repository root run these commands:
 
 cmake -S. -B build
 
 cmake --build build
 
-Run on Windows:
+Then you can run AlgoTrack on Windows by typing:
 
 .\build\AlgoTrack.exe
 
 ## Build Qt Desktop Version
 
-Install Qt 6 first.
+First install Qt 6. On Windows with MSYS2 UCRT64 you can do this:
 
-On Windows with MSYS2 UCRT64:
+pacman -S mingw-w64-ucrt-x86_64-base mingw-w64-ucrt-x86_64-qt6-tools mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja
 
-pacman -S mingw-w64-ucrt-x86_64-qt6-base mingw-w64-ucrt-x86_64-qt6-tools mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja
-
-Then build:
+Then build AlgoTrack:
 
 $env:Path = "C:\msys64\ucrt64\bin;$env:Path"
 
@@ -92,69 +92,65 @@ cmake -S. -B build -G Ninja
 
 cmake --build build
 
-Run:
+Now you can run AlgoTrack by typing:
 
 .\build\AlgoTrackQt.exe
 
 ## CSV Format
 
-Each problem is stored as:
+Each problem is saved in a CSV file like this:
 
-name,platform,difficulty,tags,status,timeSpent,date,rating,notes
+name,platform,difficulty,tags,status,timeSpent,date,rating notes
 
-Example:
+For example:
 
-two sum,leetcode,easy,arrays|hashmap,solved,10,25-03-2026,5.0,very easy
+two sum,easy,arrays|hashmap,solved,10,25-03-2026,5.0,very easy
 
-dijkstra graph,atcoder,hard,graphs|dijkstra,in_progress,60,26-03-2026,9.0,need to revisit
+dijkstra graph,atcoder,hard graphs|dijkstra,in_progress,60,26-03-2026,9.0,need to revisit
 
-Notes:
+Some notes:
 
 - Tags are separated by |
 
-- Date format is DD-MM-YYYY
+- The date format is DD-MM-YYYY
 
-- Rating is between 1.0 and 10.0
+- The rating is between 1.0 and 10.0
 
 ## Qt Desktop App
 
-The Qt version includes:
+The Qt version has:
 
-- table-based problem view
+- A table that shows your problems
 
-- add problem dialog
+- A dialog to add problems
 
-- automatic CSV saving
+- Automatic CSV saving
 
-- fuzzy search
+- Fuzzy search
 
-- statistics panel
+- A statistics panel
 
-- sorting controls
+- Controls to sort your problems
 
 - CSV import and export
 
-The Qt app saves data automatically to:
-
-data/problems.csv
-
-inside the same folder as the executable.
+The Qt app saves your data automatically to a file called data/problems.csv in the same folder, as the executable.
 
 ## Release Files
 
-GitHub Releases should include two downloadable files:
+On GitHub Releases you can download a Windows ZIP file called AlgoTrack for Windows.zip. When you open this file you will see two folders:
 
-AlgoTrack-qt-v1.0-windows.zip
+AlgoTrack-qt-windows/
 
-AlgoTrack-terminal-v1.0-windows.zip
+AlgoTrack-console-windows/
 
-The Qt release ZIP should include the executable and required Qt runtime files.
+The Qt folder has the desktop app and all the Qt runtime files. The console folder has the version.
 
-The source repository should not include:
+The source repository should not have:
 
-- .exe files
+-.exe files
 
-- .dll files
+-.dll files
 
 - build folders
 
@@ -162,4 +158,4 @@ The source repository should not include:
 
 ## Author
 
-Created by Gabriel Popovici as a C++ project focused on clean architecture, persistence, and desktop application development.
+AlgoTrack was created by Gabriel Popovici as a C++ project. He wanted to make a program that has an architecture, persistence and a desktop application.

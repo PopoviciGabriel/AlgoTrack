@@ -1,137 +1,131 @@
 # AlgoTrack Qt
 
-AlgoTrack Qt is a desktop version of AlgoTrack. It is built with C++17 and Qt 6.
+AlgoTrack Qt is the desktop version of AlgoTrack that you can use on your computer. It was built using C++17 and Qt 6.
 
-It uses the core logic as the console version for:
+AlgoTrack Qt uses the main parts as the console version. These include:
 
-* managing problems
+- problem management
 
-* saving data to CSV files
+- saving data to CSV files
 
-* searching with fuzzy logic
+- search
 
-* showing statistics
+- statistics
 
-* sorting
+- sorting
 
 ## Requirements
 
-To run AlgoTrack Qt you need:
+To use AlgoTrack Qt you need to have the following things:
 
-* Qt 6
+- Qt 6
 
-* CMake 3.16 or higher
+- CMake 3.16 or a newer version
 
-* A C++17 compiler
+- a C++17 compiler
 
-* Ninja is recommended
+- Ninja is recommended, but not required
 
-If you're on Windows, with MSYS2 UCRT64 run:
+If you are using Windows with MSYS2 UCRT64 you can install the required packages with this command:
 
 pacman -S mingw-w64-ucrt-x86_64-qt6-base mingw-w64-ucrt-x86_64-qt6-tools mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja
 
 ## Build
 
-To build AlgoTrack Qt follow these steps:
-
-1. Open a terminal. Navigate to the repository root.
-
-2. Run:
+To build AlgoTrack Qt follow these steps from the repository root:
 
 $env:Path = "C:\msys64\ucrt64\bin;$env:Path"
 
-3. Change directory to qt_app:
+Then go to the qt_app folder.
 
-cd qt_app
+Use this command to create the build files: cmake -S. -B build -G Ninja
 
-4. Run CMake:
-
-cmake -S. -B build -G Ninja
-
-5. Build the project:
-
-cmake --build build
+Then use this command to build AlgoTrack Qt: cmake --build build
 
 ## Run
 
-To run AlgoTrack Qt execute:
-
-.\build\AlgoTrackQt.exe
+You can run AlgoTrack Qt by opening the file.\build\AlgoTrackQt.exe
 
 ## Data Storage
 
-AlgoTrack Qt saves problems to a CSV file called:
+AlgoTrack Qt automatically saves your problems to a file called data/problems.csv. This file is located in the folder as the AlgoTrack Qt program.
 
-data/problems.csv
-
-This file is located in the folder as the AlgoTrackQt.exe.
-
-When you start AlgoTrack Qt again it loads the file automatically.
+When you start AlgoTrack Qt again it will load the problems from this file automatically.
 
 ## Windows Release
 
-To create a Windows release follow these steps:
+The public version of AlgoTrack for Windows is available in a ZIP file called AlgoTrack for Windows.zip.
 
-1. Build the app first:
+Inside this ZIP file you will find the AlgoTrack Qt desktop app in a folder called AlgoTrack-qt-windows.
+
+To run it follow these steps:
+
+1. Extract the ZIP file.
+
+2. Open the AlgoTrack-qt-windows folder.
+
+3. Run the file AlgoTrackQt.exe.
+
+Make sure to keep all the files and folders inside AlgoTrack-qt-windows
+
+Do not move the AlgoTrackQt.exe file outside its folder because it needs the included Qt runtime files to work
+
+## Manual Deployment
+
+If you want to deploy AlgoTrack Qt, on Windows you need to build it first.
+
+Use these commands to build AlgoTrack Qt:
 
 $env:Path = "C:\msys64\ucrt64\bin;$env:Path"
 
-cd qt_app
+Then go to the qt_app folder.
 
-cmake -S. -B build -G Ninja
+Use this command to create the build files: cmake -S. -B build -G Ninja
 
-cmake --build build
+Then use this command to build AlgoTrack Qt: cmake --build build
 
-2. Deploy the Qt files:
+After building AlgoTrack Qt you need to deploy the required Qt files.
 
-windeployqt.\build\AlgoTrackQt.exe
+Use this command to do this: windeployqt.\build\AlgoTrackQt.exe
 
-A release ZIP should contain these files:
+The Qt release folder should contain these files:
 
-* AlgoTrackQt.exe
+AlgoTrackQt.exe
 
-* Qt6Core.dll
+Qt6Core.dll
 
-* Qt6Gui.dll
+Qt6Gui.dll
 
-* Qt6Widgets.dll
+Qt6Widgets.dll
 
-* Qt6Network.dll
+Qt6Network.dll
 
-* D3Dcompiler_47.dll
+D3Dcompiler_47.dll
 
-* platforms/
+And these folders:
 
-* styles/
+platforms
 
-* imageformats/
+styles
 
-* generic/
+imageformats
 
-* networkinformation/
+generic
 
-* tls/
+networkinformation
 
-* translations/
+tls
 
-* data/
+translations
 
-Do not include these folders:
+data
 
-* source/
+Do not include these files and folders:
 
-* build/
+source
 
-* CMakeFiles/
+build
 
-* CMakeCache.txt
+CMakeFiles
 
-## Usage
-
-To use AlgoTrack Qt follow these steps:
-
-1. Download the Qt release ZIP.
-
-2. Extract the ZIP.
-
-3. Run AlgoTrackQt.exe.
+CMakeCache.txt
