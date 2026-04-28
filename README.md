@@ -50,54 +50,6 @@ After downloading a release ZIP, extract it and run the executable inside.
 
 - Clean separation between core logic, persistence, and UI
 
-## Project Structure
-
-AlgoTrack/
-
-src/
-
-Problem.*             core entity
-
-ProblemManager.*      business logic
-
-ProblemRepository.*   CSV file handling
-
-Statistics.*          analytics engine
-
-Fuzzy.*               fuzzy search
-
-Utils.*               helper functions
-
-ConsoleUI.*           console interface
-
-main.cpp              console entry point
-
-qt_app/
-
-src/
-
-main.cpp
-
-MainWindow.*
-
-AddProblemDialog.*
-
-CMakeLists.txt
-
-README.md
-
-data/
-
-problems.example.csv
-
-docs/
-
-HowToRun.txt
-
-CMakeLists.txt
-
-README.md
-
 ## Requirements
 
 For building from source:
