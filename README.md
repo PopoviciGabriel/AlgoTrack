@@ -1,197 +1,213 @@
 # AlgoTrack
 
-> A modern C++ console application for tracking and analyzing solved problems.
+AlgoTrack is a C++ application for tracking solved programming problems, analyzing progress, and storing problem history in CSV files.
+
+The project includes two versions:
+
+- Console version
+
+- Qt desktop version
+
+The console version is lightweight and runs in the terminal.
+
+The Qt version provides a desktop graphical interface.
+
+## Download
+
+Go to the GitHub Releases page and download one of the Windows builds:
+
+- AlgoTrack Qt Desktop App: recommended for most users
+
+- AlgoTrack Console App: terminal version
+
+After downloading a release ZIP, extract it and run the executable inside.
 
 ## Features
 
-* Fuzzy search (Levenshtein distance)
+- Add and manage solved problems
 
-* CSV persistence (import/export support)
+- CSV persistence
 
-* Statistics dashboard
+- Import and export CSV files
 
-* Total problems
+- Fuzzy search using Levenshtein distance
 
-* Status distribution (Solved / Failed / In Progress)
+- Statistics dashboard
 
-* Difficulty breakdown
+- Status distribution
 
-* time & rating
+- Difficulty breakdown
 
-* Most used tags
+- Time and rating tracking
 
-* Tag & platform filtering
+- Most used tags
 
-* Update system (status & notes)
+- Tag and platform filtering
 
-* Sorting
+- Update status and notes
 
-* By difficulty
+- Sorting by difficulty, time spent, and rating
 
-* By time spent
-
-* By rating (descending)
-
-* logic/UI separation
-
-* Built with C++ (C++17)
+- Clean separation between core logic, persistence, and UI
 
 ## Project Structure
 
-```
-
 AlgoTrack/
 
-│
+src/
 
-├── src/
+Problem.*             core entity
 
-│   ├── Problem.*            # core entity
+ProblemManager.*      business logic
 
-│   ├── ProblemManager.*    # business logic
+ProblemRepository.*   CSV file handling
 
-│   ├── ProblemRepository.*# file handling (CSV)
+Statistics.*          analytics engine
 
-│   ├── Statistics.*       # analytics engine
+Fuzzy.*               fuzzy search
 
-│   ├── Fuzzy.*            # fuzzy search (Levenshtein)
+Utils.*               helper functions
 
-│   ├── Utils.*            # helpers
+ConsoleUI.*           console interface
 
-│   ├── ConsoleUI.*        # user interface
+main.cpp              console entry point
 
-│   └── main.cpp
+qt_app/
 
-│
+src/
 
-├── data/
+main.cpp
 
-│   └── problems.example.csv
+MainWindow.*
 
-│
+AddProblemDialog.*
 
-├── CMakeLists.txt
+CMakeLists.txt
 
-└── README.md
+README.md
 
-```
+data/
 
-## Build & Run
+problems.example.csv
 
-### Requirements
+docs/
 
-* CMake ≥ 3.16
+HowToRun.txt
 
-* C++17 compiler (g++, clang, MSVC)
+CMakeLists.txt
 
-### Build
+README.md
 
-```bash
+## Requirements
 
-mkdir build
+For building from source:
 
-cd build
+- CMake 3.16 or newer
 
-cmake..
+- C++17 compiler
 
-cmake --build.
+- Qt 6 for the desktop GUI version
 
-```
+- Ninja recommended on Windows
 
-### Run
+## Build Console Version
 
-```bash
+From the repository root:
 
-./AlgoTrack
+cmake -S. -B build
 
-```
+cmake --build build
 
-Windows (PowerShell):
+Run on Windows:
 
-```bash
+.\build\AlgoTrack.exe
 
-.\AlgoTrack.exe
+## Build Qt Desktop Version
 
-```
+Install Qt 6 first.
+
+On Windows with MSYS2 UCRT64:
+
+pacman -S mingw-w64-ucrt-x86_64-qt6-base mingw-w64-ucrt-x86_64-qt6-tools mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja
+
+Then build:
+
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+
+cd qt_app
+
+cmake -S. -B build -G Ninja
+
+cmake --build build
+
+Run:
+
+.\build\AlgoTrackQt.exe
 
 ## CSV Format
 
 Each problem is stored as:
 
-```
+name,platform,difficulty,tags,status,timeSpent,date,rating,notes
 
-name,platform,difficulty,tags,status,timeSpent,date,rating notes
+Example:
 
-```
+two sum,leetcode,easy,arrays|hashmap,solved,10,25-03-2026,5.0,very easy
 
-### Example:
-
-```
-
-two sum,easy,arrays|hashmap,solved,10,25-03-2026,5.0,very easy
-
-dijkstra graph,atcoder hard graphs|dijkstra solved,60,26-03-2026,9.0,important problem
-
-```
+dijkstra graph,atcoder,hard,graphs|dijkstra,in_progress,60,26-03-2026,9.0,need to revisit
 
 Notes:
 
-* Tags are separated by `|`
+- Tags are separated by |
 
-* Date format: `DD-MM-YYYY`
+- Date format is DD-MM-YYYY
 
-* Rating: `1.0. 10.0`
+- Rating is between 1.0 and 10.0
 
-## Design Highlights
+## Qt Desktop App
 
-* Strong separation of concerns
+The Qt version includes:
 
-* Logic ≠ UI ≠ persistence
+- table-based problem view
 
-* Input validation (exceptions)
+- add problem dialog
 
-* Custom CSV parser (handles quotes & commas)
+- automatic CSV saving
 
-* Fuzzy matching system for UX
+- fuzzy search
 
-* Modular architecture (easy to extend)
+- statistics panel
 
-## Example Use Cases
+- sorting controls
 
-* Track solved problems from platforms like:
+- CSV import and export
 
-* LeetCode
+The Qt app saves data automatically to:
 
-* Codeforces
+data/problems.csv
 
-* AtCoder
+inside the same folder as the executable.
 
-* Analyze your progress over time
+## Release Files
 
-* Identify areas (difficulty / tags)
+GitHub Releases should include two downloadable files:
 
-## Future Improvements
+AlgoTrack-qt-v1.0-windows.zip
 
-* [ ] GUI version (Qt / ImGui)
+AlgoTrack-terminal-v1.0-windows.zip
 
-* [ ] JSON support
+The Qt release ZIP should include the executable and required Qt runtime files.
 
-* [ ] Charts / visualization
+The source repository should not include:
 
-* [ ] Cloud sync
+- .exe files
 
-* [ ] Tag-based recommendations
+- .dll files
+
+- build folders
+
+- release ZIP/RAR files
 
 ## Author
 
-Built as a project to improve:
-
-* Modern C++
-
-* Clean architecture
-
-* Real-world application design
-
-## If you like it
-
-Give it a star, on GitHub. It helps a lot!
+Created by Gabriel Popovici as a C++ project focused on clean architecture, persistence, and desktop application development.

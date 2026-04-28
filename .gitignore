@@ -1,18 +1,28 @@
 # Build
 build/
-*.exe
-*.o
-*.obj
-*.log
-
-# CMake
+cmake-build-*/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 Makefile
+*.o
+*.obj
+*.log
 
-# VSCode
+# Executables and runtime files
+*.exe
+*.dll
+
+# Archives / releases
+*.zip
+*.rar
+*.7z
+
+# IDE
 .vscode/
+.idea/
+*.user
+*.autosave
 
-# Data (user-specific)
+# User data
 data/problems.csv
