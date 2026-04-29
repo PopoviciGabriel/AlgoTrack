@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlgoTrack - LeetCode & Algorithm Practice Tracker for Developers</title>
+  <meta name="description" content="AlgoTrack is a focused C++/Qt desktop app for tracking LeetCode, Codeforces, AtCoder and coding interview problems with status, tags, notes, time logs and statistics.">
+  <meta name="keywords" content="leetcode tracker, algorithm practice tracker, coding problems tracker, track coding problems, organize coding problems, competitive programming tracker">
+  <meta name="author" content="AlgoTrack">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="AlgoTrack - Algorithm Practice Tracker">
+  <meta property="og:description" content="Track coding problems, notes, ratings, tags and progress in a focused C++/Qt desktop app.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://algotrack.dev/">
+  <meta property="og:image" content="https://algotrack.dev/assets/screenshots/preview.png">
+  <meta name="twitter:title" content="AlgoTrack - LeetCode & Algorithm Practice Tracker">
+  <meta name="twitter:description" content="Organize algorithm practice across LeetCode, Codeforces and AtCoder with a focused C++/Qt desktop tracker.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://algotrack.dev/assets/screenshots/preview.png">
+  <link rel="canonical" href="https://algotrack.dev/">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="script.js"></script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "AlgoTrack",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Windows",
+      "description": "A desktop app for tracking algorithm practice problems from LeetCode, Codeforces, AtCoder and other platforms.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header class="site-header" data-header>
+    <a class="brand" href="#top" aria-label="AlgoTrack home">
+      <span class="brand-mark">AT</span>
+      <span>AlgoTrack</span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle>
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <nav class="site-nav" data-nav>
+      <a href="#features">Features</a>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#why">Why</a>
+      <a href="#guide">Guide</a>
+      <a class="nav-download" href="#download">Download</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Desktop tracker for serious algorithm practice</p>
+        <h1>Track every coding problem, note, tag and breakthrough in one focused app.</h1>
+        <p class="hero-lead">AlgoTrack helps programmers organize LeetCode, Codeforces, AtCoder and interview prep problems with clean status tracking, difficulty filters, ratings, time logs, notes and useful practice statistics.</p>
+        <div class="hero-download" id="download">
+          <div class="hero-actions">
+            <a class="button primary" href="https://github.com/PopoviciGabriel/AlgoTrack/releases" target="_blank" rel="noopener">Download for Windows</a>
+            <a class="button secondary" href="https://github.com/PopoviciGabriel/AlgoTrack" target="_blank" rel="noopener">View on GitHub</a>
+          </div>
+          <p class="download-note">Free desktop app. Windows build available through GitHub Releases.</p>
+        </div>
+        <dl class="hero-stats" aria-label="AlgoTrack highlights">
+          <div>
+            <dt>Status</dt>
+            <dd>Solved, failed, in progress</dd>
+          </div>
+          <div>
+            <dt>Platforms</dt>
+            <dd>LeetCode, Codeforces, AtCoder</dd>
+          </div>
+          <div>
+            <dt>Insights</dt>
+            <dd>Difficulty, time and progress</dd>
+          </div>
+        </dl>
+      </div>
+      <div class="hero-visual" aria-label="AlgoTrack desktop app screenshot">
+        <figure class="hero-screenshot">
+          <img src="assets/screenshots/problem-lists.png" alt="AlgoTrack desktop dashboard showing coding problem statistics and progress insights.">
+        </figure>
+      </div>
+    </section>
+
+    <section class="section band" id="features">
+      <div class="section-heading">
+        <p class="eyebrow">Features</p>
+        <h2>Everything you need to keep algorithm practice organized</h2>
+        <p>AlgoTrack is built around the information competitive programmers and interview candidates actually review later: what happened, why it happened, and what to do next.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card">
+          <span class="icon">01</span>
+          <h3>Problem library</h3>
+          <p>Save problem names, platforms, ratings, difficulties and links so every practice session becomes searchable history instead of a scattered browser trail.</p>
+        </article>
+        <article class="feature-card">
+          <span class="icon">02</span>
+          <h3>Status tracking</h3>
+          <p>Mark problems as solved, failed or in progress. See what needs a retry and avoid quietly forgetting the problems that exposed a weak pattern.</p>
+        </article>
+        <article class="feature-card">
+          <span class="icon">03</span>
+          <h3>Tags and patterns</h3>
+          <p>Group problems by dynamic programming, graphs, greedy, binary search, trees, strings or your own custom tags for deliberate topic-based practice.</p>
+        </article>
+        <article class="feature-card">
+          <span class="icon">04</span>
+          <h3>Time and notes</h3>
+          <p>Record time spent and write concise notes about mistakes, key ideas, edge cases and follow-up improvements while the solution is still fresh.</p>
+        </article>
+        <article class="feature-card">
+          <span class="icon">05</span>
+          <h3>Statistics dashboard</h3>
+          <p>Review total problems, difficulty distribution, average solving time and progress trends to understand whether your practice is balanced.</p>
+        </article>
+        <article class="feature-card">
+          <span class="icon">06</span>
+          <h3>Desktop focus</h3>
+          <p>Built as a C++/Qt desktop application, AlgoTrack keeps your practice tracker fast, local and distraction-free while you work.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="screenshots">
+      <div class="section-heading">
+        <p class="eyebrow">Screenshots</p>
+        <h2>A clear workspace for coding practice</h2>
+        <p>Real AlgoTrack screens show the desktop workflow for logging problems, reviewing progress and keeping notes close to your practice history.</p>
+      </div>
+      <div class="screenshot-grid">
+        <figure class="screenshot">
+          <a class="screenshot-link" href="assets/screenshots/problem-lists.png" target="_blank" rel="noopener" aria-label="Open problem library screenshot in full size">
+            <img src="assets/screenshots/problem-lists.png" alt="AlgoTrack problem library showing coding problems with platform, status, difficulty, tags and statistics.">
+          </a>
+          <figcaption>Problem library with platform, status, difficulty, tags and progress details.</figcaption>
+        </figure>
+        <figure class="screenshot">
+          <a class="screenshot-link" href="assets/screenshots/add-problem.png" target="_blank" rel="noopener" aria-label="Open new problem form screenshot in full size">
+            <img src="assets/screenshots/add-problem.png" alt="AlgoTrack new problem form for adding platform, difficulty, tags, time, rating and notes.">
+          </a>
+          <figcaption>Add new problems with platform, difficulty, tags, time spent, rating and notes.</figcaption>
+        </figure>
+        <figure class="screenshot">
+          <a class="screenshot-link" href="assets/screenshots/fuzzy-search.png" target="_blank" rel="noopener" aria-label="Open fuzzy search screenshot in full size">
+            <img src="assets/screenshots/fuzzy-search.png" alt="AlgoTrack fuzzy search filtering coding problems by approximate name, platform, tag, status and notes.">
+          </a>
+          <figcaption>Fuzzy search helps you find problems by approximate name, platform, tag, status or notes.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section band proof-section" id="proof">
+      <div class="section-heading">
+        <p class="eyebrow">Built for practice</p>
+        <h2>Built for real algorithm practice</h2>
+        <p>AlgoTrack was built while training algorithms seriously, with a focus on tracking real progress instead of keeping scattered notes, browser history and unfinished spreadsheets.</p>
+      </div>
+      <div class="proof-grid">
+        <article class="proof-card">
+          <span class="icon">01</span>
+          <h3>Real practice workflow</h3>
+          <p>Built around problem status, difficulty, tags, notes and solving time.</p>
+        </article>
+        <article class="proof-card">
+          <span class="icon">02</span>
+          <h3>Local desktop focus</h3>
+          <p>A fast C++/Qt desktop app designed for distraction-free practice.</p>
+        </article>
+        <article class="proof-card">
+          <span class="icon">03</span>
+          <h3>Review-oriented tracking</h3>
+          <p>Helps identify failed problems, weak topics and problems worth retrying.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section split band" id="why">
+      <div>
+        <p class="eyebrow">Why use AlgoTrack</p>
+        <h2>Because solving more problems is not the same as practicing better.</h2>
+      </div>
+      <div class="reason-list">
+        <p><strong>Spreadsheets become messy.</strong> They work for a week, then filters, notes and links start fighting each other. AlgoTrack gives the workflow a dedicated home.</p>
+        <p><strong>Browser history forgets context.</strong> You need to know not only which problem you opened, but what you tried, how long it took and whether you should revisit it.</p>
+        <p><strong>Practice needs feedback.</strong> Difficulty distribution, failed attempts and average solving time reveal weak areas faster than memory alone.</p>
+        <p><strong>Local desktop tools stay focused.</strong> AlgoTrack is designed as a practical C++/Qt app for programmers who want a quiet place to manage progress.</p>
+      </div>
+    </section>
+
+    <section class="section band" id="blog">
+      <div class="section-heading">
+        <p class="eyebrow">Articles</p>
+        <h2>Guides for better algorithm practice</h2>
+        <p>SEO-focused content can bring search traffic from developers looking for a LeetCode tracker or a better way to organize coding problems.</p>
+      </div>
+      <div class="article-cards">
+        <a href="#guide" class="article-card">
+          <span>Complete guide</span>
+          <h3>Best Way to Track Coding Problems</h3>
+          <p>A practical method for turning random problem solving into measurable progress.</p>
+        </a>
+        <a href="#guide" class="article-card">
+          <span>Workflow</span>
+          <h3>How to Organize LeetCode Problems</h3>
+          <p>Build a review loop using tags, notes, difficulty and time spent.</p>
+        </a>
+        <a href="#guide" class="article-card">
+          <span>Tools</span>
+          <h3>Spreadsheet vs Desktop Tracker</h3>
+          <p>When a dedicated algorithm practice tracker becomes worth it.</p>
+        </a>
+      </div>
+    </section>
+
+    <article class="guide" id="guide">
+      <header class="guide-header">
+        <p class="eyebrow">SEO Guide</p>
+        <h1>Best Way to Track Coding Problems (Complete Guide)</h1>
+        <p class="guide-meta">A practical guide for developers preparing for interviews, improving competitive programming performance, or building a consistent algorithm practice habit.</p>
+      </header>
+
+      <!-- AdSense here -->
+      <div class="ad-slot" aria-label="Advertisement placeholder">Advertisement</div>
+
+      <p>If you practice algorithms regularly, you eventually run into a quiet but expensive problem: the work becomes hard to remember. You solve a LeetCode problem today, struggle with a Codeforces graph task tomorrow, bookmark an AtCoder dynamic programming problem for later, and after a few weeks your progress is spread across browser history, platform profiles, random notes, screenshots and half-finished spreadsheets. The result is not just inconvenience. It makes practice less effective because you lose the context that turns each problem into a lesson.</p>
+
+      <p>The best way to track coding problems is to keep a structured practice log that records the problem, platform, status, difficulty, topic tags, rating, time spent, notes and review intent. A good tracker should answer simple questions quickly: Which dynamic programming problems did I fail? How many hard problems did I solve this month? What topics take me the longest? Which problems should I retry before an interview? Without those answers, algorithm practice can feel productive while still being poorly directed.</p>
+
+      <h2>Why Tracking Coding Problems Is Hard</h2>
+      <p>Most developers start by assuming the platform will remember everything for them. LeetCode stores submissions, Codeforces stores contests and AtCoder keeps accepted solutions, but those records are platform-specific. They rarely explain your reasoning, your failed ideas, or whether a problem was solved after reading the editorial. They also do not combine your practice across websites. If your training includes interview problems, virtual contests and topic drills, you need a place that sees the whole picture.</p>
+
+      <p>Another challenge is that algorithm progress is not linear. Solving ten easy array problems may feel good, but it does not prove readiness for harder graph, tree or dynamic programming tasks. A useful tracker makes patterns visible. You may discover that you solve medium binary search problems quickly but consistently spend too long on recursion. You may notice that your failed problems cluster around shortest paths or bitmask DP. That insight is difficult to get from memory alone.</p>
+
+      <h2>What a Good Algorithm Practice Tracker Should Include</h2>
+      <p>A strong coding problem tracker does not need to be complicated, but it does need the right fields. At minimum, record the problem name, platform, URL, status, difficulty and tags. These fields make the tracker searchable and allow you to group problems by topic or progress stage. For example, you can filter for unsolved graph problems, solved hard problems, or all Codeforces tasks rated around 1600.</p>
+
+      <h3>Status</h3>
+      <p>Status is one of the most important fields because it separates finished work from unresolved learning opportunities. Simple labels such as solved, failed and in progress are enough for most people. A failed problem is not a bad result; it is a signal. The tracker should make failed attempts easy to revisit because those problems often produce the biggest improvement when reviewed properly.</p>
+
+      <h3>Difficulty and Rating</h3>
+      <p>Difficulty helps you balance practice. LeetCode uses categories like easy, medium and hard, while Codeforces and AtCoder often use numerical ratings. Keeping both a difficulty field and a rating field gives you flexibility. Over time, you can see whether your average rating is increasing and whether your practice is stuck in a comfort zone.</p>
+
+      <h3>Tags</h3>
+      <p>Tags turn a long list of problems into a learning map. Common tags include arrays, strings, binary search, graphs, trees, dynamic programming, greedy, math, data structures and two pointers. You can also add personal tags such as review, interview, editorial needed or tricky edge case. The goal is not to tag perfectly. The goal is to make future review easier.</p>
+
+      <h3>Time Spent</h3>
+      <p>Tracking time can feel unnecessary at first, but it becomes useful quickly. If a medium problem takes two hours, that may reveal a concept gap. If a hard problem takes twenty minutes because you recently practiced the same pattern, that is useful too. Average solving time helps you understand whether speed is improving, especially when preparing for timed interviews or contests.</p>
+
+      <h2>Common Ways to Track LeetCode and Coding Problems</h2>
+      <p>There are several ways to organize coding problems, and each one has tradeoffs. The simplest method is a notebook or markdown file. This is fast and flexible, but it becomes hard to filter once the list grows. You can write excellent notes, yet still struggle to answer data questions like how many graph problems you failed this month.</p>
+
+      <p>Spreadsheets are the next common option. A spreadsheet can store structured fields, filters and formulas. It is a good starting point for many developers. The downside is that spreadsheets are not designed specifically for algorithm practice. Notes can become cramped, tags can become inconsistent, and the workflow often feels more like maintaining a database than learning algorithms.</p>
+
+      <p>Some people rely only on platform profiles. This works if all practice happens in one place and if submission history is enough. For most developers, it is not enough. Interview prep usually combines multiple platforms, curated lists, company questions, contest problems and personal notes. A platform profile cannot easily tell the full story.</p>
+
+      <!-- AdSense here -->
+      <div class="ad-slot" aria-label="Advertisement placeholder">Advertisement</div>
+
+      <h2>Using AlgoTrack as a Dedicated Coding Problem Tracker</h2>
+      <p>AlgoTrack is designed for developers who want a focused desktop app for algorithm practice tracking. Instead of forcing your workflow into a generic spreadsheet, it gives you fields that match the way programmers actually practice: problem name, status, difficulty, tags, platform, rating, time spent and notes. Because it is built as a C++/Qt desktop application, it fits naturally into a local development setup and keeps the experience fast and direct.</p>
+
+      <p>The biggest advantage of a dedicated tracker is consistency. When every problem is logged in the same format, review becomes easier. You can open the app after a practice session, add the problem, mark whether it was solved or failed, tag the relevant topics and write the one or two ideas that mattered. Later, when you want to review dynamic programming or prepare for a graph-heavy interview, your past work is ready to filter and inspect.</p>
+
+      <p>AlgoTrack also supports statistics, which are essential for long-term improvement. Total problem count can be motivating, but deeper stats are more useful: difficulty distribution, average time spent and progress by status. These numbers help you avoid accidental imbalance. If almost every solved problem is easy, the tracker will show it. If hard problems always remain in progress, that is a signal to adjust your study plan.</p>
+
+      <h2>A Practical Workflow for Tracking Coding Problems</h2>
+      <p>Start simple. After each practice session, log every meaningful problem. Do not wait until the end of the week because the details fade quickly. Add the problem name, platform and difficulty first. Then choose a status. If you solved it without help, mark it solved. If you needed the editorial or could not finish, mark it failed or in progress. The label is not about pride; it is about making the next review honest.</p>
+
+      <p>Next, add tags. Use broad topic tags first, such as graphs or dynamic programming, then add more specific tags only when they help. For example, shortest path is more useful than a vague graph tag when you want to review Dijkstra or BFS. Keep tag names consistent so filtering remains clean.</p>
+
+      <p>Finally, write notes that your future self can understand in thirty seconds. A good note might say: "Missed the monotonic stack pattern; next greater element from right to left." Another might say: "Solved after editorial; revisit binary search on answer." Notes should capture the key lesson, not rewrite the entire solution.</p>
+
+      <h2>How Often Should You Review Your Tracker?</h2>
+      <p>A weekly review is enough for most developers. Look at failed and in-progress problems first. Choose a small number to retry without reading the previous solution. Then scan your statistics. Are you practicing the topics you intended to practice? Is your average time improving? Are you avoiding hard problems? This review loop turns tracking from passive record keeping into active training.</p>
+
+      <p>Before interviews or contests, use the tracker differently. Filter by relevant tags and revisit representative problems. For interviews, that might mean arrays, hash maps, binary search, trees, graphs and dynamic programming. For competitive programming, it might mean ratings around your target level and topics with repeated failures.</p>
+
+      <h2>Final Recommendation</h2>
+      <p>The best way to track coding problems is the method you will actually maintain, but it should be structured enough to support review. For beginners, a spreadsheet can be a useful starting point. For developers practicing consistently across LeetCode, Codeforces, AtCoder and other platforms, a dedicated algorithm practice tracker is usually better. AlgoTrack gives that workflow a focused desktop home: save the problem, mark the status, add tags and notes, track time and use statistics to guide the next session.</p>
+
+      <p>Good tracking does not solve problems for you, but it makes every problem count more. It shows what you practiced, what you avoided, where you improved and what deserves another attempt. That is the difference between simply doing more problems and building a practice system that compounds over time.</p>
+
+      <!-- AdSense here -->
+      <div class="ad-slot" aria-label="Advertisement placeholder">Advertisement</div>
+    </article>
+
+    <section class="section final-cta" id="final-download">
+      <div class="final-cta-inner">
+        <p class="eyebrow">Download</p>
+        <h2>Start tracking your coding problems</h2>
+        <p>Download AlgoTrack and keep your LeetCode, Codeforces, AtCoder and interview practice organized in one focused desktop app.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="https://github.com/PopoviciGabriel/AlgoTrack/releases" target="_blank" rel="noopener">Download for Windows</a>
+          <a class="button secondary" href="https://github.com/PopoviciGabriel/AlgoTrack" target="_blank" rel="noopener">View on GitHub</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div>
+      <a class="brand" href="#top" aria-label="AlgoTrack home">
+        <span class="brand-mark">AT</span>
+        <span>AlgoTrack</span>
+      </a>
+      <p>Organize LeetCode, Codeforces, AtCoder and interview practice in one desktop tracker.</p>
+    </div>
+    <nav aria-label="Footer navigation">
+      <a href="#features">Features</a>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#guide">SEO Guide</a>
+      <a href="https://github.com/PopoviciGabriel/AlgoTrack" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </footer>
+</body>
+</html>
