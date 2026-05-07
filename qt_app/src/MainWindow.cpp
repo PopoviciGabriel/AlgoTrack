@@ -454,7 +454,7 @@ void MainWindow::autoSave() {
 }
 
 QString MainWindow::defaultDataPath() const {
-    return QDir(QCoreApplication::applicationDirPath()).filePath("data/problems.csv");
+    return QDir(QCoreApplication::applicationDirPath()).filePath("../../data/problems.csv");
 }
 
 void MainWindow::loadFromPath(const QString& path) {

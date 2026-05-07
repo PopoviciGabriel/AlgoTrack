@@ -1,0 +1,121 @@
+# HOW TO RUN
+
+This file explains how to build and run the project locally.
+
+## Requirements
+
+Before running the project, make sure you have the following installed:
+
+* Git
+* A C++ compiler with C++17 support or newer
+* CMake
+* Make / build tools
+
+On Ubuntu / Debian, you can install them with:
+
+```
+sudo apt update
+sudo apt install build-essential cmake git
+```
+
+## Clone the Repository
+
+Clone the project from GitHub:
+
+```
+git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
+```
+
+Enter the project folder:
+
+```
+cd YOUR_REPOSITORY_NAME
+```
+
+## Build the Project
+
+Create a build folder:
+
+```
+mkdir build
+cd build
+```
+
+Generate the build files with CMake:
+
+```
+cmake ..
+```
+
+Compile the project:
+
+```
+cmake --build .
+```
+
+## Run the Project
+
+After the build finishes, run the executable from the build folder.
+
+Example:
+
+```
+./AlgoTrack
+```
+
+If the executable has a different name, check the build folder and run the generated file:
+
+```
+ls
+```
+
+Then run it with:
+
+```
+./EXECUTABLE_NAME
+```
+
+## Running from VS Code
+
+1. Open the project folder in VS Code.
+
+2. Make sure the C/C++ and CMake Tools extensions are installed.
+
+3. Open the Command Palette with Ctrl + Shift + P.
+
+4. Select:
+
+   CMake: Configure
+
+5. Then select:
+
+   CMake: Build
+
+6. Run the generated executable from the terminal or use the Run button if configured.
+
+## Project Structure
+
+A typical structure may look like this:
+
+```
+project-folder/
+├── src/
+├── include/
+├── CMakeLists.txt
+├── README.md
+└── howtorun.txt
+```
+
+## Notes
+
+* Make sure you are inside the project folder before running CMake.
+
+* If the build folder already exists and you get errors, you can delete it and rebuild:
+
+  rm -rf build
+  mkdir build
+  cd build
+  cmake ..
+  cmake --build .
+
+* If the project uses external libraries, install them before building.

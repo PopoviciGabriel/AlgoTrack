@@ -1,0 +1,16 @@
+# ninja log v7
+20	2277	7998651342682051	AlgoTrackQt_autogen/timestamp	7365f27d0d2df8f9
+20	2277	7998651342682051	AlgoTrackQt_autogen/mocs_compilation.cpp	7365f27d0d2df8f9
+20	2277	7998651342682051	D:/AlgoTrack/build_qt/AlgoTrackQt_autogen/timestamp	7365f27d0d2df8f9
+20	2277	7998651342682051	D:/AlgoTrack/build_qt/AlgoTrackQt_autogen/mocs_compilation.cpp	7365f27d0d2df8f9
+2321	2841	7998651343402978	CMakeFiles/AlgoTrackQt.dir/D_/AlgoTrack/src/Fuzzy.cpp.obj	ad67518ca789d64a
+2314	3069	7998651343341489	CMakeFiles/AlgoTrackQt.dir/D_/AlgoTrack/src/Statistics.cpp.obj	5758f0dc95bf9ea0
+2309	3082	7998651343285260	CMakeFiles/AlgoTrackQt.dir/D_/AlgoTrack/src/ProblemRepository.cpp.obj	556dc52814c314d5
+2298	3144	7998651343176731	CMakeFiles/AlgoTrackQt.dir/D_/AlgoTrack/src/Problem.cpp.obj	e433f1459d165b93
+2303	3151	7998651343229411	CMakeFiles/AlgoTrackQt.dir/D_/AlgoTrack/src/ProblemManager.cpp.obj	6fb9e8a02f148cd6
+2326	3173	7998651343463097	CMakeFiles/AlgoTrackQt.dir/D_/AlgoTrack/src/Utils.cpp.obj	67496afa68911af8
+2280	4162	7998651343002910	CMakeFiles/AlgoTrackQt.dir/AlgoTrackQt_autogen/mocs_compilation.cpp.obj	67ebfbeb69d9425a
+2285	4215	7998651343051264	CMakeFiles/AlgoTrackQt.dir/src/main.cpp.obj	82e426985273daeb
+2293	5212	7998651343130329	CMakeFiles/AlgoTrackQt.dir/src/AddProblemDialog.cpp.obj	33e2cdf26f33dd37
+2289	5461	7998651343081678	CMakeFiles/AlgoTrackQt.dir/src/MainWindow.cpp.obj	bd46a92a75838d93
+5462	5722	7998651374814042	AlgoTrackQt.exe	a100806a752f922e
