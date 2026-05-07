@@ -661,7 +661,11 @@ namespace {
     }
 
     void loadInitialData(ProblemManager& manager) {
+<<<<<<< HEAD
         LoadResult loadResult = ProblemRepository::loadFromFile("data/problems.csv");
+=======
+        LoadResult loadResult = ProblemRepository::loadFromFile("../data/problems.csv");
+>>>>>>> c337fb0fbd88ad81fc89cb6e1ccfaaddea90edf2
 
         if (loadResult.fileOpened) {
             manager.setProblems(loadResult.problems);
