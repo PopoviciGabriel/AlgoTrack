@@ -1,121 +1,53 @@
-# HOW TO RUN
+=========================================
+      HOW TO BUILD AND RUN ALGOTRACK
+=========================================
 
-This file explains how to build and run the project locally.
+AlgoTrack is built using CMake and requires a C++17 compiler and the Qt6 framework.
 
-## Requirements
+-----------------------------------------
+1. PREREQUISITES
+-----------------------------------------
+Before building, ensure you have the necessary tools installed.
 
-Before running the project, make sure you have the following installed:
-
-* Git
-* A C++ compiler with C++17 support or newer
-* CMake
-* Make / build tools
-
-On Ubuntu / Debian, you can install them with:
-
-```
+For Ubuntu/Debian Linux:
+Open your terminal and run:
 sudo apt update
-sudo apt install build-essential cmake git
-```
+sudo apt install build-essential cmake qt6-base-dev qt6-base-private-dev
 
-## Clone the Repository
+For Windows:
+- Install Visual Studio (with C++ Desktop Development workload) or MinGW.
+- Install CMake (add it to PATH).
+- Install Qt6 via the official Qt Online Installer.
 
-Clone the project from GitHub:
+For macOS:
+brew install cmake qt6
 
-```
-git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
-```
+-----------------------------------------
+2. BUILD INSTRUCTIONS
+-----------------------------------------
+Open a terminal in the root folder of the project (where CMakeLists.txt is located) and run the following commands:
 
-Enter the project folder:
+Step 2.1 - Generate the build system:
+cmake -B build
 
-```
-cd YOUR_REPOSITORY_NAME
-```
+Step 2.2 - Compile the project:
+cmake --build build
 
-## Build the Project
+-----------------------------------------
+3. HOW TO RUN
+-----------------------------------------
+After a successful build, the executables will be located in the "build" directory. You only need to launch the GUI (Qt) application, and it will automatically start the CLI backend.
 
-Create a build folder:
+For Linux / macOS:
+./build/qt_app/AlgoTrackQt
 
-```
-mkdir build
-cd build
-```
+For Windows (depending on your compiler):
+.\build\qt_app\Debug\AlgoTrackQt.exe
+(or simply .\build\qt_app\AlgoTrackQt.exe)
 
-Generate the build files with CMake:
-
-```
-cmake ..
-```
-
-Compile the project:
-
-```
-cmake --build .
-```
-
-## Run the Project
-
-After the build finishes, run the executable from the build folder.
-
-Example:
-
-```
-./AlgoTrack
-```
-
-If the executable has a different name, check the build folder and run the generated file:
-
-```
-ls
-```
-
-Then run it with:
-
-```
-./EXECUTABLE_NAME
-```
-
-## Running from VS Code
-
-1. Open the project folder in VS Code.
-
-2. Make sure the C/C++ and CMake Tools extensions are installed.
-
-3. Open the Command Palette with Ctrl + Shift + P.
-
-4. Select:
-
-   CMake: Configure
-
-5. Then select:
-
-   CMake: Build
-
-6. Run the generated executable from the terminal or use the Run button if configured.
-
-## Project Structure
-
-A typical structure may look like this:
-
-```
-project-folder/
-├── src/
-├── include/
-├── CMakeLists.txt
-├── README.md
-└── howtorun.txt
-```
-
-## Notes
-
-* Make sure you are inside the project folder before running CMake.
-
-* If the build folder already exists and you get errors, you can delete it and rebuild:
-
-  rm -rf build
-  mkdir build
-  cd build
-  cmake ..
-  cmake --build .
-
-* If the project uses external libraries, install them before building.
+-----------------------------------------
+TROUBLESHOOTING
+-----------------------------------------
+- "Error: Backend not found": Ensure you run the application from the root folder of the project so the relative paths match, or rebuild the project cleanly by deleting the "build" folder and repeating Step 2.
+- "Qt6_DIR not found": If CMake cannot find Qt6, you might need to specify its path manually: 
+  cmake -B build -DCMAKE_PREFIX_PATH="/path/to/your/Qt/6.x.x/gcc_64"
