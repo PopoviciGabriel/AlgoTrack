@@ -1,37 +1,34 @@
-#pragma once
-
-#include "Problem.h"
+#ifndef ALGOTRACK_ADD_PROBLEM_DIALOG_H
+#define ALGOTRACK_ADD_PROBLEM_DIALOG_H
 
 #include <QDialog>
+#include <memory>
 
-class QComboBox;
-class QDateEdit;
-class QDialogButtonBox;
-class QDoubleSpinBox;
-class QLineEdit;
-class QPlainTextEdit;
-class QSpinBox;
+class Problem;
+class AddProblemDialogImpl; // Forward declaration pentru implementarea ascunsă
 
-class AddProblemDialog : public QDialog {
+class AddProblemDialog : public QDialog
+{
     Q_OBJECT
+    friend class AddProblemDialogImpl;
+
+    // Constructorul este PRIVAT. Nimeni din exterior nu poate face `AddProblemDialog dialog;`
+    explicit AddProblemDialog(QWidget *parent);
 
 public:
-    explicit AddProblemDialog(QWidget* parent = nullptr);
-
     Problem problem() const;
 
-private:
-    QLineEdit* nameEdit;
-    QLineEdit* platformEdit;
-    QComboBox* difficultyCombo;
-    QLineEdit* tagsEdit;
-    QComboBox* statusCombo;
-    QSpinBox* timeSpin;
-    QDateEdit* dateEdit;
-    QDoubleSpinBox* ratingSpin;
-    QPlainTextEdit* notesEdit;
-    QDialogButtonBox* buttons;
+    // Deleter personalizat pentru un unique_ptr capabil să distrugă tipul ascuns
+    // fără să fim obligați să adăugăm un dtor virtual costisitor
+    struct deleter
+    {
+        void operator()(AddProblemDialog *ptr);
+    };
 
-    Difficulty selectedDifficulty() const;
-    Status selectedStatus() const;
+    using unique_ptr = std::unique_ptr<AddProblemDialog, deleter>;
+
+    // Factory Method: Singura metodă prin care MainWindow va instanția dialogul
+    static unique_ptr create(QWidget *parent = nullptr);
 };
+
+#endif // ALGOTRACK_ADD_PROBLEM_DIALOG_H

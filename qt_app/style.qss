@@ -1,0 +1,108 @@
+/* --- FUNDALUL ȘI TEXTUL GENERAL --- */
+QMainWindow, QDialog {
+    background-color: #f8fafc; /* Fundal "off-white" modern */
+    color: #1e293b;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* --- CARDURI DE METRICI (Cele 4 de sus) --- */
+QFrame#metricCard {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+QLabel#metricLabel {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+QLabel#metricValue {
+    color: #1e293b;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+/* --- TABELUL DE DATE --- */
+QTableWidget {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    gridline-color: #f1f5f9;
+    selection-background-color: #dbeafe;
+    selection-color: #1e40af;
+    outline: none;
+}
+
+QHeaderView::section {
+    background-color: #f1f5f9;
+    padding: 10px;
+    border: none;
+    border-bottom: 2px solid #e2e8f0;
+    color: #475569;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+QTableWidget::item {
+    padding: 12px;
+}
+
+/* --- BUTOANE --- */
+QPushButton {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 8px 16px;
+    color: #374151;
+    font-weight: 600;
+}
+
+QPushButton:hover {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+}
+
+/* Butonul Primar (Add Problem) */
+QPushButton#primaryButton {
+    background-color: #2563eb;
+    border: 1px solid #2563eb;
+    color: #ffffff;
+}
+
+QPushButton#primaryButton:hover {
+    background-color: #1d4ed8;
+}
+
+/* --- INPUT-URI (Căutare) --- */
+QLineEdit {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 8px 12px;
+    selection-background-color: #2563eb;
+}
+
+QLineEdit:focus {
+    border: 2px solid #3b82f6;
+}
+
+/* --- SCROLL BAR (Minimalist) --- */
+QScrollBar:vertical {
+    border: none;
+    background: #f1f5f9;
+    width: 8px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: #cbd5e1;
+    min-height: 20px;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #94a3b8;
+}

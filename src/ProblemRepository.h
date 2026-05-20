@@ -1,10 +1,15 @@
-#pragma once
+#ifndef ALGOTRACK_PROBLEM_REPOSITORY_H
+#define ALGOTRACK_PROBLEM_REPOSITORY_H
 
 #include <string>
 #include <vector>
 #include "Problem.h"
+#include <string>
+#include <vector>
+#include "Problem.h"
 
-struct LoadResult {
+struct LoadResult
+{
     bool fileOpened = true;
     int loadedCount = 0;
     int duplicateCount = 0;
@@ -12,18 +17,22 @@ struct LoadResult {
     std::vector<Problem> problems;
 };
 
-struct ImportResult {
+struct ImportResult
+{
     bool fileOpened = true;
     int importedCount = 0;
     int duplicateCount = 0;
     int invalidCount = 0;
 };
 
-class ProblemRepository {
+class ProblemRepository
+{
 public:
-    static LoadResult loadFromFile(const std::string& filename);
-    static bool saveToFile(const std::string& filename, const std::vector<Problem>& problems);
+    static LoadResult loadFromFile(const std::string &filename);
+    static bool saveToFile(const std::string &filename, const std::vector<Problem> &problems);
 
-    static ImportResult importFromFile(const std::string& filename, std::vector<Problem>& problems);
-    static bool exportToFile(const std::string& filename, const std::vector<Problem>& problems);
+    static ImportResult importFromFile(const std::string &filename, std::vector<Problem> &problems);
+    static bool exportToFile(const std::string &filename, const std::vector<Problem> &problems);
 };
+
+#endif // ALGOTRACK_PROBLEM_REPOSITORY_H

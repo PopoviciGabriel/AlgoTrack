@@ -1,14 +1,18 @@
-#pragma once
-#include <string>
+#ifndef ALGOTRACK_ENUMS_H
+#define ALGOTRACK_ENUMS_H
 
-enum class Difficulty { Easy, Medium, Hard };
-enum class Status { Solved, Failed, InProgress };
-enum class AddProblemResult { Success, Duplicate };
-
-struct SearchResult{
-    bool exactFound = false;
-    bool fuzzyFound = false;
-    int index = -1;
-    int distance = -1;
-    std::string closestMatch;
+enum class Difficulty
+{
+    Easy,
+    Medium,
+    Hard
 };
+
+enum class Status
+{
+    Solved,
+    Failed,
+    InProgress
+};
+
+#endif // ALGOTRACK_ENUMS_H

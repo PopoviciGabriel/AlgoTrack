@@ -1,28 +1,21 @@
-# Build
+# CMake & Build folders
 build/
-cmake-build-*/
-CMakeFiles/
+out/
+bin/
 CMakeCache.txt
+CMakeFiles/
 cmake_install.cmake
 Makefile
-*.o
-*.obj
-*.log
+*.ninja
 
-# Executables and runtime files
-*.exe
-*.dll
-
-# Archives / releases
-*.zip
-*.rar
-*.7z
-
-# IDE
+# Qt / OS / IDE files
+*.user
 .vscode/
 .idea/
-*.user
-*.autosave
+.DS_Store
 
-# User data
-data/problems.csv
+# Executables
+*.exe
+*.out
+AlgoTrackCli
+AlgoTrackQt

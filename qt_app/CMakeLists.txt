@@ -1,44 +1,25 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.15)
+project(AlgoTrackQt)
 
-project(AlgoTrackQt VERSION 1.0 LANGUAGES CXX)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
-qt_standard_project_setup()
-
-set(CORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../src")
-
-qt_add_executable(AlgoTrackQt
+# Adăugăm fișierul .ui direct în surse
+set(PROJECT_SOURCES
     src/main.cpp
-    src/MainWindow.h
     src/MainWindow.cpp
-    src/AddProblemDialog.h
     src/AddProblemDialog.cpp
-    ${CORE_DIR}/Problem.h
-    ${CORE_DIR}/Problem.cpp
-    ${CORE_DIR}/ProblemManager.h
-    ${CORE_DIR}/ProblemManager.cpp
-    ${CORE_DIR}/ProblemRepository.h
-    ${CORE_DIR}/ProblemRepository.cpp
-    ${CORE_DIR}/Statistics.h
-    ${CORE_DIR}/Statistics.cpp
-    ${CORE_DIR}/Fuzzy.h
-    ${CORE_DIR}/Fuzzy.cpp
-    ${CORE_DIR}/Utils.h
-    ${CORE_DIR}/Utils.cpp
-    ${CORE_DIR}/Enums.h
+    src/AddProblemDialog.ui
 )
 
-target_include_directories(AlgoTrackQt PRIVATE
-    src
-    ${CORE_DIR}
-)
+add_executable(AlgoTrackQt ${PROJECT_SOURCES})
 
-target_link_libraries(AlgoTrackQt PRIVATE Qt6::Widgets)
+target_link_libraries(AlgoTrackQt PRIVATE Qt6::Widgets LibAlgoTrack)
+target_include_directories(AlgoTrackQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
 
-set_target_properties(AlgoTrackQt PROPERTIES
-    WIN32_EXECUTABLE ON
-)
+# Comenzi critice pentru resurse
+configure_file(style.qss ${CMAKE_CURRENT_BINARY_DIR}/style.qss COPYONLY)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
