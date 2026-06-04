@@ -5,11 +5,70 @@
 #include <QProcess>
 #include <QString>
 #include <QStringList>
+#include <variant>
 
-// Forward Declarations pentru widget-uri
 class QTableWidget;
 class QLineEdit;
 class QLabel;
+
+// Tipuri puternice pentru mesajele IPC
+namespace IPC
+{
+    struct Ready
+    {
+    };
+    struct FoundExact
+    {
+        QString name;
+        QString csv;
+    };
+    struct FoundFuzzy
+    {
+        QString name;
+        QString csv;
+    };
+    struct NotFound
+    {
+    };
+    struct StartList
+    {
+    };
+    struct EndList
+    {
+    };
+    struct StartStats
+    {
+    };
+    struct EndStats
+    {
+    };
+    struct Success
+    {
+    };
+    struct Error
+    {
+        QString message;
+    };
+    struct DataLine
+    {
+        QString content;
+    };
+
+    using Message = std::variant<Ready, FoundExact, FoundFuzzy, NotFound,
+                                 StartList, EndList, StartStats, EndStats,
+                                 Success, Error, DataLine>;
+
+    Message parseMessage(const QString &line);
+}
+
+// Utilitar C++17 pentru std::visit
+template <class... Ts>
+struct overloaded : Ts...
+{
+    using Ts::operator()...;
+};
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
 
 class MainWindow : public QMainWindow
 {
@@ -43,14 +102,21 @@ private:
     QLabel *ratingValue;
     QLabel *timeValue;
 
-    // Proprietăți specifice controlului IPC (Pasul 1)
     QProcess *cliProcess;
-    QString outputBuffer;
+
+    // Stări pentru parsarea liniilor de date
+    bool readingList = false;
+    bool readingStats = false;
+    QString statsHtmlBuffer;
 
     void buildUi();
-    void applyTheme();
     void sendCommandToCli(const QString &command);
-    void parseIncomingLine(const QString &line);
+    void processMessage(const IPC::Message &msg);
+
+    // Funcții ajutătoare
+    void addCsvRowToTable(const QString &csv);
+    void populateTableSingleRow(const QString &csv);
+    void processStatLine(const QString &line);
 };
 
 #endif // ALGOTRACK_MAIN_WINDOW_H

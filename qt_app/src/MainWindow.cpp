@@ -25,6 +25,44 @@
 #include <QVBoxLayout>
 #include <QDebug>
 
+// --- FACTORY-ul de mesaje ---
+IPC::Message IPC::parseMessage(const QString &line)
+{
+    if (line == "READY")
+        return Ready{};
+    if (line == "NOT_FOUND")
+        return NotFound{};
+    if (line == "START_LIST")
+        return StartList{};
+    if (line == "END_LIST")
+        return EndList{};
+    if (line == "START_STATS")
+        return StartStats{};
+    if (line == "END_STATS")
+        return EndStats{};
+    if (line.startsWith("SUCCESS"))
+        return Success{};
+    if (line.startsWith("ERROR"))
+        return Error{line.mid(6).trimmed()};
+
+    if (line.startsWith("FOUND_EXACT") || line.startsWith("FOUND_FUZZY"))
+    {
+        int firstPipe = line.indexOf('|');
+        int secondPipe = line.indexOf('|', firstPipe + 1);
+        if (firstPipe != -1 && secondPipe != -1)
+        {
+            QString name = line.mid(firstPipe + 1, secondPipe - firstPipe - 1).trimmed();
+            QString csv = line.mid(secondPipe + 1);
+            if (line.startsWith("FOUND_EXACT"))
+                return FoundExact{name, csv};
+            else
+                return FoundFuzzy{name, csv};
+        }
+    }
+
+    return DataLine{line};
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       table(new QTableWidget(this)),
@@ -42,14 +80,13 @@ MainWindow::MainWindow(QWidget *parent)
     QString appDir = QCoreApplication::applicationDirPath();
     cliProcess->setWorkingDirectory(appDir);
 
-    // Căutăm inteligent executabilul CLI în mai multe locații (inclusiv CMake build path)
     QString cliPath = "";
     QStringList possiblePaths = {
-        appDir + "/AlgoTrackCli",        // Același folder (Linux)
-        appDir + "/AlgoTrackCli.exe",    // Același folder (Windows)
-        appDir + "/../AlgoTrackCli",     // Un folder mai sus (Linux CMake default)
-        appDir + "/../AlgoTrackCli.exe", // Un folder mai sus (Windows CMake default)
-        appDir + "/../../AlgoTrackCli",  // Două foldere mai sus (fallback)
+        appDir + "/AlgoTrackCli",
+        appDir + "/AlgoTrackCli.exe",
+        appDir + "/../AlgoTrackCli",
+        appDir + "/../AlgoTrackCli.exe",
+        appDir + "/../../AlgoTrackCli",
         appDir + "/../../AlgoTrackCli.exe"};
 
     bool found = false;
@@ -263,212 +300,162 @@ void MainWindow::sendCommandToCli(const QString &command)
     }
 }
 
+// --- WHOLE MESSAGE HANDLING ---
 void MainWindow::handleCliOutput()
 {
-    outputBuffer += QString::fromUtf8(cliProcess->readAllStandardOutput());
-
-    int pos;
-    while ((pos = outputBuffer.indexOf('\n')) != -1)
+    // Ne asigurăm că procesăm doar mesaje întregi, prevenind erorile de stream
+    while (cliProcess->canReadLine())
     {
-        QString line = outputBuffer.left(pos).trimmed();
-        outputBuffer.remove(0, pos + 1);
-        if (!line.isEmpty())
-        {
-            parseIncomingLine(line);
-        }
+        QString line = QString::fromUtf8(cliProcess->readLine()).trimmed();
+        if (line.isEmpty())
+            continue;
+
+        IPC::Message msg = IPC::parseMessage(line);
+        processMessage(msg);
     }
 }
 
-void MainWindow::parseIncomingLine(const QString &line)
+// --- TYPE-SAFE DISPATCHER ---
+void MainWindow::processMessage(const IPC::Message &msg)
 {
-    if (line == "READY")
-    {
-        sendCommandToCli("LIST");
-        sendCommandToCli("STATS");
-        statusLabel->setText("Connected to backend.");
-        return;
-    }
+    std::visit(overloaded{[this](const IPC::Ready &)
+                          {
+                              sendCommandToCli("LIST");
+                              sendCommandToCli("STATS");
+                              statusLabel->setText("Connected to backend.");
+                          },
+                          [this](const IPC::NotFound &)
+                          {
+                              table->setRowCount(0);
+                              statusLabel->setText("Nu s-au găsit probleme pentru căutarea selectată.");
+                          },
+                          [this](const IPC::FoundExact &m)
+                          {
+                              populateTableSingleRow(m.csv);
+                              statusLabel->setText(QString("Potrivire exactă găsită: %1").arg(m.name.toUpper()));
+                          },
+                          [this](const IPC::FoundFuzzy &m)
+                          {
+                              populateTableSingleRow(m.csv);
+                              statusLabel->setText(QString("Fuzzy Match găsit (Levenshtein): %1").arg(m.name.toUpper()));
+                          },
+                          [this](const IPC::StartList &)
+                          {
+                              readingList = true;
+                              table->setRowCount(0);
+                          },
+                          [this](const IPC::EndList &)
+                          {
+                              readingList = false;
+                              statusLabel->setText(QString("%1 probleme încărcate").arg(table->rowCount()));
 
-    if (line.startsWith("FOUND_EXACT") || line.startsWith("FOUND_FUZZY"))
-    {
-        int firstPipe = line.indexOf('|');
-        int secondPipe = line.indexOf('|', firstPipe + 1);
+                              int calculatedTotalTime = 0;
+                              for (int r = 0; r < table->rowCount(); ++r)
+                              {
+                                  if (table->item(r, 5))
+                                      calculatedTotalTime += table->item(r, 5)->text().toInt();
+                              }
+                              if (calculatedTotalTime > 0)
+                                  timeValue->setText(QString("%1m").arg(calculatedTotalTime));
+                          },
+                          [this](const IPC::StartStats &)
+                          {
+                              readingStats = true;
+                              statsHtmlBuffer = "<div style='font-size:20px; font-weight:800; color:#1e293b; margin-bottom:14px; border-bottom:2px solid #e2e8f0; padding-bottom:4px;'>Details</div><div style='font-size:14px; color:#334155; line-height:1.6;'>";
+                          },
+                          [this](const IPC::EndStats &)
+                          {
+                              readingStats = false;
+                              statsHtmlBuffer += "</div>";
+                              statsLabel->setText(statsHtmlBuffer);
+                          },
+                          [this](const IPC::Success &)
+                          {
+                              sendCommandToCli("LIST");
+                              sendCommandToCli("STATS");
+                          },
+                          [this](const IPC::Error &m)
+                          {
+                              QMessageBox::critical(this, "Operation Failed", m.message);
+                          },
+                          [this](const IPC::DataLine &m)
+                          {
+                              if (readingList)
+                                  addCsvRowToTable(m.content);
+                              else if (readingStats)
+                                  processStatLine(m.content);
+                          }},
+               msg);
+}
 
-        if (firstPipe != -1 && secondPipe != -1)
+void MainWindow::populateTableSingleRow(const QString &csv)
+{
+    table->clearContents();
+    table->setRowCount(0);
+    addCsvRowToTable(csv);
+    table->viewport()->update();
+    table->selectRow(0);
+}
+
+void MainWindow::addCsvRowToTable(const QString &csv)
+{
+    int row = table->rowCount();
+    table->insertRow(row);
+    QStringList fields = csv.split(',');
+    for (int i = 0; i < fields.size() && i < table->columnCount(); ++i)
+    {
+        QString cleanField = fields[i].trimmed();
+        if (cleanField.startsWith('"') && cleanField.endsWith('"'))
         {
-            QString commandType = line.left(firstPipe);
-            QString matchedName = line.mid(firstPipe + 1, secondPipe - firstPipe - 1).trimmed();
-            QString rawCsv = line.mid(secondPipe + 1);
-
-            table->clearContents();
-            table->setRowCount(0);
-            table->insertRow(0);
-
-            QStringList fields = rawCsv.split(',');
-            for (int i = 0; i < fields.size() && i < table->columnCount(); ++i)
-            {
-                QString cleanField = fields[i].trimmed();
-                if (cleanField.startsWith('"') && cleanField.endsWith('"'))
-                {
-                    cleanField = cleanField.mid(1, cleanField.size() - 2);
-                }
-                else
-                {
-                    cleanField.replace(QString("\""), QString(""));
-                }
-
-                if (i == 7)
-                {
-                    bool ok;
-                    double val = cleanField.toDouble(&ok);
-                    if (ok)
-                        cleanField = QString::number(val, 'f', 2);
-                }
-
-                auto *item = new QTableWidgetItem(cleanField);
-                table->setItem(0, i, item);
-            }
-
-            table->viewport()->update();
-            table->selectRow(0);
-
-            if (commandType == "FOUND_FUZZY")
-            {
-                statusLabel->setText(QString("Fuzzy Match găsit (Levenshtein): %1").arg(matchedName.toUpper()));
-            }
-            else
-            {
-                statusLabel->setText(QString("Potrivire exactă găsită: %1").arg(matchedName.toUpper()));
-            }
+            cleanField = cleanField.mid(1, cleanField.size() - 2);
         }
-        return;
-    }
-
-    if (line == "NOT_FOUND")
-    {
-        table->setRowCount(0);
-        statusLabel->setText("Nu s-au găsit probleme pentru căutarea selectată.");
-        return;
-    }
-
-    static bool readingList = false;
-    static bool readingStats = false;
-    static QString statsHtml = "";
-
-    if (line == "START_LIST")
-    {
-        readingList = true;
-        table->setRowCount(0);
-        return;
-    }
-    if (line == "END_LIST")
-    {
-        readingList = false;
-        statusLabel->setText(QString("%1 probleme încărcate").arg(table->rowCount()));
-
-        int calculatedTotalTime = 0;
-        for (int r = 0; r < table->rowCount(); ++r)
+        else
         {
-            if (table->item(r, 5))
-            {
-                calculatedTotalTime += table->item(r, 5)->text().toInt();
-            }
+            cleanField.replace("\"", "");
         }
-        if (calculatedTotalTime > 0)
+        if (i == 7)
         {
-            timeValue->setText(QString("%1m").arg(calculatedTotalTime));
+            bool ok;
+            double val = cleanField.toDouble(&ok);
+            if (ok)
+                cleanField = QString::number(val, 'f', 2);
         }
-        return;
+        auto *item = new QTableWidgetItem(cleanField);
+        item->setToolTip(cleanField);
+        table->setItem(row, i, item);
     }
-    if (line == "START_STATS")
-    {
-        readingStats = true;
-        statsHtml = "<div style='font-size:20px; font-weight:800; color:#1e293b; margin-bottom:14px; border-bottom:2px solid #e2e8f0; padding-bottom:4px;'>Details</div>"
-                    "<div style='font-size:14px; color:#334155; line-height:1.6;'>";
-        return;
-    }
-    if (line == "END_STATS")
-    {
-        readingStats = false;
-        statsHtml += "</div>";
-        statsLabel->setText(statsHtml);
-        return;
-    }
+}
 
-    if (readingList)
-    {
-        int row = table->rowCount();
-        table->insertRow(row);
-
-        QStringList fields = line.split(',');
-        for (int i = 0; i < fields.size() && i < table->columnCount(); ++i)
-        {
-            QString cleanField = fields[i];
-            if (cleanField.startsWith('"') && cleanField.endsWith('"'))
-            {
-                cleanField = cleanField.mid(1, cleanField.size() - 2);
-            }
-            if (i == 7)
-            {
-                bool ok;
-                double val = cleanField.toDouble(&ok);
-                if (ok)
-                    cleanField = QString::number(val, 'f', 2);
-            }
-            auto *item = new QTableWidgetItem(cleanField);
-            item->setToolTip(cleanField);
-            table->setItem(row, i, item);
-        }
+void MainWindow::processStatLine(const QString &line)
+{
+    QStringList parts = line.split(':');
+    if (parts.size() != 2)
         return;
-    }
+    QString key = parts[0];
+    QString val = parts[1];
 
-    if (readingStats)
+    if (key == "total")
+        totalValue->setText(val);
+    else if (key == "solved")
+        solvedValue->setText(val);
+    else if (key == "avg_rating")
     {
-        QStringList parts = line.split(':');
-        if (parts.size() == 2)
-        {
-            QString key = parts[0];
-            QString val = parts[1];
-
-            if (key == "total")
-                totalValue->setText(val);
-            else if (key == "solved")
-                solvedValue->setText(val);
-            else if (key == "avg_rating")
-            {
-                bool ok;
-                double rVal = val.toDouble(&ok);
-                ratingValue->setText(ok ? QString::number(rVal, 'f', 2) : val);
-            }
-            else if (key == "total_time" && val.toInt() > 0)
-                timeValue->setText(val + "m");
-            else if (key == "failed")
-                statsHtml += QString("<div style='margin-bottom:6px;'><b>Failed:</b> <span style='color:#ef4444; font-weight:600;'>%1</span></div>").arg(val);
-            else if (key == "progress")
-                statsHtml += QString("<div style='margin-bottom:6px;'><b>In progress:</b> <span style='color:#f59e0b; font-weight:600;'>%1</span></div>").arg(val);
-            else if (key == "avg_time")
-                statsHtml += QString("<div style='margin-bottom:6px;'><b>Average time:</b> %1 min</div>").arg(val);
-            else if (key == "most_used_tag")
-                statsHtml += QString("<div style='margin-top:16px; border-top:1px dashed #e2e8f0; padding-top:8px;'><b style='color:#0f172a;'>Most used tag:</b></div>"
-                                     "<div style='display:inline-block; background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:600; margin-top:4px;'>%1</div>")
-                                 .arg(val);
-            else
-            {
-                statsHtml += QString("<div style='margin-bottom:4px;'><b>%1:</b> %2</div>").arg(key, val);
-            }
-        }
-        return;
+        bool ok;
+        double rVal = val.toDouble(&ok);
+        ratingValue->setText(ok ? QString::number(rVal, 'f', 2) : val);
     }
-
-    if (line.startsWith("SUCCESS"))
-    {
-        sendCommandToCli("LIST");
-        sendCommandToCli("STATS");
-    }
-    else if (line.startsWith("ERROR"))
-    {
-        QMessageBox::critical(this, "Operation Failed", line.mid(6).trimmed());
-    }
+    else if (key == "total_time" && val.toInt() > 0)
+        timeValue->setText(val + "m");
+    else if (key == "failed")
+        statsHtmlBuffer += QString("<div style='margin-bottom:6px;'><b>Failed:</b> <span style='color:#ef4444; font-weight:600;'>%1</span></div>").arg(val);
+    else if (key == "progress")
+        statsHtmlBuffer += QString("<div style='margin-bottom:6px;'><b>In progress:</b> <span style='color:#f59e0b; font-weight:600;'>%1</span></div>").arg(val);
+    else if (key == "avg_time")
+        statsHtmlBuffer += QString("<div style='margin-bottom:6px;'><b>Average time:</b> %1 min</div>").arg(val);
+    else if (key == "most_used_tag")
+        statsHtmlBuffer += QString("<div style='margin-top:16px; border-top:1px dashed #e2e8f0; padding-top:8px;'><b style='color:#0f172a;'>Most used tag:</b></div><div style='display:inline-block; background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:600; margin-top:4px;'>%1</div>").arg(val);
+    else
+        statsHtmlBuffer += QString("<div style='margin-bottom:4px;'><b>%1:</b> %2</div>").arg(key, val);
 }
 
 void MainWindow::addProblem()
