@@ -17,6 +17,7 @@ set(PROJECT_SOURCES
     src/MainWindow.cpp
     src/AddProblemDialog.cpp
     src/AddProblemDialog.ui
+    resources.qrc
 )
 
 # ADAUGAM WIN32 pentru a ascunde consola neagră din spate pe Windows
@@ -25,6 +26,5 @@ add_executable(AlgoTrackQt WIN32 ${PROJECT_SOURCES})
 target_link_libraries(AlgoTrackQt PRIVATE Qt6::Widgets LibAlgoTrack)
 target_include_directories(AlgoTrackQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
 
-# Comenzi critice pentru resurse
-configure_file(style.qss ${CMAKE_CURRENT_BINARY_DIR}/style.qss COPYONLY)
+# Copiem folderul de date. Fișierul style.qss este acum compilat direct prin resources.qrc
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

@@ -5,21 +5,19 @@
 #include <memory>
 
 class Problem;
-class AddProblemDialogImpl; // Forward declaration pentru implementarea ascunsă
+class AddProblemDialogImpl;
 
 class AddProblemDialog : public QDialog
 {
     Q_OBJECT
     friend class AddProblemDialogImpl;
 
-    // Constructorul este PRIVAT. Nimeni din exterior nu poate face `AddProblemDialog dialog;`
+    // Constructorul este PRIVAT. Nimeni din exterior nu poate instanția direct.
     explicit AddProblemDialog(QWidget *parent);
 
 public:
     Problem problem() const;
 
-    // Deleter personalizat pentru un unique_ptr capabil să distrugă tipul ascuns
-    // fără să fim obligați să adăugăm un dtor virtual costisitor
     struct deleter
     {
         void operator()(AddProblemDialog *ptr);
@@ -27,7 +25,7 @@ public:
 
     using unique_ptr = std::unique_ptr<AddProblemDialog, deleter>;
 
-    // Factory Method: Singura metodă prin care MainWindow va instanția dialogul
+    // Factory Method
     static unique_ptr create(QWidget *parent = nullptr);
 };
 

@@ -25,7 +25,6 @@
 #include <QVBoxLayout>
 #include <QDebug>
 
-// --- FACTORY-ul de mesaje ---
 IPC::Message IPC::parseMessage(const QString &line)
 {
     if (line == "READY")
@@ -63,64 +62,6 @@ IPC::Message IPC::parseMessage(const QString &line)
     return DataLine{line};
 }
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent),
-      table(new QTableWidget(this)),
-      searchEdit(new QLineEdit(this)),
-      statusLabel(new QLabel(this)),
-      statsLabel(new QLabel(this)),
-      totalValue(new QLabel("0", this)),
-      solvedValue(new QLabel("0", this)),
-      ratingValue(new QLabel("0.0", this)),
-      timeValue(new QLabel("0m", this)),
-      cliProcess(new QProcess(this))
-{
-    buildUi();
-
-    QString appDir = QCoreApplication::applicationDirPath();
-    cliProcess->setWorkingDirectory(appDir);
-
-    QString cliPath = "";
-    QStringList possiblePaths = {
-        appDir + "/AlgoTrackCli",
-        appDir + "/AlgoTrackCli.exe",
-        appDir + "/../AlgoTrackCli",
-        appDir + "/../AlgoTrackCli.exe",
-        appDir + "/../../AlgoTrackCli",
-        appDir + "/../../AlgoTrackCli.exe"};
-
-    bool found = false;
-    for (const QString &path : possiblePaths)
-    {
-        if (QFile::exists(path))
-        {
-            cliPath = path;
-            found = true;
-            break;
-        }
-    }
-
-    if (!found)
-    {
-        qWarning() << "Critical: Backend AlgoTrackCli not found near GUI.";
-        statusLabel->setText("Error: Backend not found.");
-    }
-    else
-    {
-        connect(cliProcess, &QProcess::readyReadStandardOutput, this, &MainWindow::handleCliOutput);
-        cliProcess->start(cliPath);
-    }
-}
-
-MainWindow::~MainWindow()
-{
-    if (cliProcess->state() == QProcess::Running)
-    {
-        sendCommandToCli("EXIT");
-        cliProcess->waitForFinished(2000);
-    }
-}
-
 static QPushButton *makeCommandButton(const QString &text, QWidget *parent)
 {
     auto *button = new QPushButton(text, parent);
@@ -147,149 +88,223 @@ static QFrame *makeMetricCard(const QString &label, QLabel *value, QWidget *pare
     return card;
 }
 
-void MainWindow::buildUi()
+// ---------------------------------------------------------
+// Pimpl Pattern: Stocăm UI-ul principal izolat de antet
+// ---------------------------------------------------------
+struct MainWindowImpl
 {
-    setWindowTitle("AlgoTrack");
-    resize(1180, 700);
-    setMinimumSize(780, 520);
+    QTableWidget *table;
+    QLineEdit *searchEdit;
+    QLabel *statusLabel;
+    QLabel *statsLabel;
+    QLabel *totalValue;
+    QLabel *solvedValue;
+    QLabel *ratingValue;
+    QLabel *timeValue;
 
-    auto *fileMenu = menuBar()->addMenu("&File");
-    fileMenu->addAction("Open CSV", this, &MainWindow::loadFile);
-    fileMenu->addAction("Save", this, &MainWindow::saveFile);
-    fileMenu->addAction("Save As", this, &MainWindow::saveFileAs);
-    fileMenu->addSeparator();
-    fileMenu->addAction("Import CSV", this, &MainWindow::importFile);
-    fileMenu->addAction("Export CSV", this, &MainWindow::exportFile);
+    void setupUi(MainWindow *mw)
+    {
+        mw->setWindowTitle("AlgoTrack");
+        mw->resize(1180, 700);
+        mw->setMinimumSize(780, 520);
 
-    auto *sortMenu = menuBar()->addMenu("&Sort");
-    sortMenu->addAction("By difficulty", this, &MainWindow::sortByDifficulty);
-    sortMenu->addAction("By time", this, &MainWindow::sortByTime);
-    sortMenu->addAction("By rating", this, &MainWindow::sortByRating);
+        table = new QTableWidget(mw);
+        searchEdit = new QLineEdit(mw);
+        statusLabel = new QLabel(mw);
+        statsLabel = new QLabel(mw);
+        totalValue = new QLabel("0", mw);
+        solvedValue = new QLabel("0", mw);
+        ratingValue = new QLabel("0.0", mw);
+        timeValue = new QLabel("0m", mw);
 
-    auto *toolbar = addToolBar("Quick actions");
-    toolbar->setMovable(false);
-    toolbar->addAction("Add", this, &MainWindow::addProblem);
-    toolbar->addAction("Delete", this, &MainWindow::deleteSelectedProblem);
-    toolbar->addSeparator();
-    toolbar->addAction("Open", this, &MainWindow::loadFile);
-    toolbar->addAction("Save", this, &MainWindow::saveFile);
+        auto *fileMenu = mw->menuBar()->addMenu("&File");
+        fileMenu->addAction("Open CSV", mw, &MainWindow::loadFile);
+        fileMenu->addAction("Save", mw, &MainWindow::saveFile);
+        fileMenu->addAction("Save As", mw, &MainWindow::saveFileAs);
+        fileMenu->addSeparator();
+        fileMenu->addAction("Import CSV", mw, &MainWindow::importFile);
+        fileMenu->addAction("Export CSV", mw, &MainWindow::exportFile);
 
-    auto *root = new QWidget(this);
-    auto *rootLayout = new QVBoxLayout(root);
-    rootLayout->setContentsMargins(18, 16, 18, 12);
-    rootLayout->setSpacing(12);
+        auto *sortMenu = mw->menuBar()->addMenu("&Sort");
+        sortMenu->addAction("By difficulty", mw, &MainWindow::sortByDifficulty);
+        sortMenu->addAction("By time", mw, &MainWindow::sortByTime);
+        sortMenu->addAction("By rating", mw, &MainWindow::sortByRating);
 
-    auto *topRow = new QHBoxLayout;
+        auto *toolbar = mw->addToolBar("Quick actions");
+        toolbar->setMovable(false);
+        toolbar->addAction("Add", mw, &MainWindow::addProblem);
+        toolbar->addAction("Delete", mw, &MainWindow::deleteSelectedProblem);
+        toolbar->addSeparator();
+        toolbar->addAction("Open", mw, &MainWindow::loadFile);
+        toolbar->addAction("Save", mw, &MainWindow::saveFile);
 
-    auto *titleBox = new QVBoxLayout;
-    auto *title = new QLabel("AlgoTrack", this);
-    title->setObjectName("appTitle");
-    auto *subtitle = new QLabel("Problems, progress, and patterns in one calm workspace.", this);
-    subtitle->setObjectName("appSubtitle");
-    titleBox->addWidget(title);
-    titleBox->addWidget(subtitle);
+        auto *root = new QWidget(mw);
+        auto *rootLayout = new QVBoxLayout(root);
+        rootLayout->setContentsMargins(18, 16, 18, 12);
+        rootLayout->setSpacing(12);
 
-    auto *addButton = makeCommandButton("Add problem", this);
-    addButton->setObjectName("primaryButton");
-    auto *openButton = makeCommandButton("Open CSV", this);
-    auto *saveButton = makeCommandButton("Save", this);
+        auto *topRow = new QHBoxLayout;
 
-    topRow->addLayout(titleBox, 1);
-    topRow->addWidget(openButton);
-    topRow->addWidget(saveButton);
-    topRow->addWidget(addButton);
-    rootLayout->addLayout(topRow);
+        auto *titleBox = new QVBoxLayout;
+        auto *title = new QLabel("AlgoTrack", mw);
+        title->setObjectName("appTitle");
+        auto *subtitle = new QLabel("Problems, progress, and patterns in one calm workspace.", mw);
+        subtitle->setObjectName("appSubtitle");
+        titleBox->addWidget(title);
+        titleBox->addWidget(subtitle);
 
-    auto *metrics = new QGridLayout;
-    metrics->setHorizontalSpacing(12);
-    metrics->setColumnStretch(0, 1);
-    metrics->setColumnStretch(1, 1);
-    metrics->setColumnStretch(2, 1);
-    metrics->setColumnStretch(3, 1);
-    metrics->addWidget(makeMetricCard("Total", totalValue, this), 0, 0);
-    metrics->addWidget(makeMetricCard("Solved", solvedValue, this), 0, 1);
-    metrics->addWidget(makeMetricCard("Avg rating", ratingValue, this), 0, 2);
-    metrics->addWidget(makeMetricCard("Total time", timeValue, this), 0, 3);
-    rootLayout->addLayout(metrics);
+        auto *addButton = makeCommandButton("Add problem", mw);
+        addButton->setObjectName("primaryButton");
+        auto *openButton = makeCommandButton("Open CSV", mw);
+        auto *saveButton = makeCommandButton("Save", mw);
 
-    searchEdit->setPlaceholderText("Search by name, platform, tag, status, notes...");
-    searchEdit->setMinimumHeight(40);
+        topRow->addLayout(titleBox, 1);
+        topRow->addWidget(openButton);
+        topRow->addWidget(saveButton);
+        topRow->addWidget(addButton);
+        rootLayout->addLayout(topRow);
 
-    auto *searchButton = makeCommandButton("Search", this);
-    auto *clearButton = makeCommandButton("Clear", this);
-    auto *sortDifficultyButton = makeCommandButton("Difficulty", this);
-    auto *sortTimeButton = makeCommandButton("Time", this);
-    auto *sortRatingButton = makeCommandButton("Rating", this);
+        auto *metrics = new QGridLayout;
+        metrics->setHorizontalSpacing(12);
+        metrics->setColumnStretch(0, 1);
+        metrics->setColumnStretch(1, 1);
+        metrics->setColumnStretch(2, 1);
+        metrics->setColumnStretch(3, 1);
+        metrics->addWidget(makeMetricCard("Total", totalValue, mw), 0, 0);
+        metrics->addWidget(makeMetricCard("Solved", solvedValue, mw), 0, 1);
+        metrics->addWidget(makeMetricCard("Avg rating", ratingValue, mw), 0, 2);
+        metrics->addWidget(makeMetricCard("Total time", timeValue, mw), 0, 3);
+        rootLayout->addLayout(metrics);
 
-    auto *searchRow = new QHBoxLayout;
-    searchRow->setSpacing(10);
-    searchRow->addWidget(searchEdit, 1);
-    searchRow->addWidget(searchButton);
-    searchRow->addWidget(clearButton);
-    searchRow->addSpacing(10);
-    searchRow->addWidget(sortDifficultyButton);
-    searchRow->addWidget(sortTimeButton);
-    searchRow->addWidget(sortRatingButton);
-    rootLayout->addLayout(searchRow);
+        searchEdit->setPlaceholderText("Search by name, platform, tag, status, notes...");
+        searchEdit->setMinimumHeight(40);
 
-    table->setColumnCount(9);
-    table->setHorizontalHeaderLabels({"Name", "Platform", "Difficulty", "Tags", "Status",
-                                      "Time", "Date", "Rating", "Notes"});
-    table->setSelectionBehavior(QAbstractItemView::SelectRows);
-    table->setSelectionMode(QAbstractItemView::SingleSelection);
-    table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    table->setAlternatingRowColors(true);
-    table->verticalHeader()->setVisible(false);
-    table->horizontalHeader()->setStretchLastSection(false);
-    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    table->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    table->setWordWrap(false);
+        auto *searchButton = makeCommandButton("Search", mw);
+        auto *clearButton = makeCommandButton("Clear", mw);
+        auto *sortDifficultyButton = makeCommandButton("Difficulty", mw);
+        auto *sortTimeButton = makeCommandButton("Time", mw);
+        auto *sortRatingButton = makeCommandButton("Rating", mw);
 
-    auto *tablePanel = new QFrame(this);
-    tablePanel->setObjectName("tablePanel");
-    auto *tableLayout = new QVBoxLayout(tablePanel);
-    tableLayout->setContentsMargins(1, 1, 1, 1);
-    tableLayout->addWidget(table);
+        auto *searchRow = new QHBoxLayout;
+        searchRow->setSpacing(10);
+        searchRow->addWidget(searchEdit, 1);
+        searchRow->addWidget(searchButton);
+        searchRow->addWidget(clearButton);
+        searchRow->addSpacing(10);
+        searchRow->addWidget(sortDifficultyButton);
+        searchRow->addWidget(sortTimeButton);
+        searchRow->addWidget(sortRatingButton);
+        rootLayout->addLayout(searchRow);
 
-    statsLabel->setObjectName("statsPanel");
-    statsLabel->setMinimumWidth(220);
-    statsLabel->setMaximumWidth(280);
-    statsLabel->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    statsLabel->setWordWrap(true);
+        table->setColumnCount(9);
+        table->setHorizontalHeaderLabels({"Name", "Platform", "Difficulty", "Tags", "Status",
+                                          "Time", "Date", "Rating", "Notes"});
+        table->setSelectionBehavior(QAbstractItemView::SelectRows);
+        table->setSelectionMode(QAbstractItemView::SingleSelection);
+        table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        table->setAlternatingRowColors(true);
+        table->verticalHeader()->setVisible(false);
+        table->horizontalHeader()->setStretchLastSection(false);
+        table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+        table->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        table->setWordWrap(false);
 
-    auto *splitter = new QSplitter(this);
-    auto *statsScroll = new QScrollArea(this);
-    statsScroll->setObjectName("statsScroll");
-    statsScroll->setWidget(statsLabel);
-    statsScroll->setWidgetResizable(true);
-    statsScroll->setFrameShape(QFrame::NoFrame);
-    statsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    statsScroll->setMinimumWidth(220);
-    statsScroll->setMaximumWidth(280);
+        auto *tablePanel = new QFrame(mw);
+        tablePanel->setObjectName("tablePanel");
+        auto *tableLayout = new QVBoxLayout(tablePanel);
+        tableLayout->setContentsMargins(1, 1, 1, 1);
+        tableLayout->addWidget(table);
 
-    splitter->addWidget(tablePanel);
-    splitter->addWidget(statsScroll);
-    splitter->setStretchFactor(0, 1);
-    splitter->setStretchFactor(1, 0);
-    splitter->setSizes({860, 240});
-    rootLayout->addWidget(splitter, 1);
+        statsLabel->setObjectName("statsPanel");
+        statsLabel->setMinimumWidth(220);
+        statsLabel->setMaximumWidth(280);
+        statsLabel->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+        statsLabel->setWordWrap(true);
 
-    setCentralWidget(root);
-    statusBar()->addWidget(statusLabel, 1);
+        auto *splitter = new QSplitter(mw);
+        auto *statsScroll = new QScrollArea(mw);
+        statsScroll->setObjectName("statsScroll");
+        statsScroll->setWidget(statsLabel);
+        statsScroll->setWidgetResizable(true);
+        statsScroll->setFrameShape(QFrame::NoFrame);
+        statsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        statsScroll->setMinimumWidth(220);
+        statsScroll->setMaximumWidth(280);
 
-    connect(addButton, &QPushButton::clicked, this, &MainWindow::addProblem);
-    connect(openButton, &QPushButton::clicked, this, &MainWindow::loadFile);
-    connect(saveButton, &QPushButton::clicked, this, &MainWindow::saveFile);
-    connect(searchButton, &QPushButton::clicked, this, &MainWindow::applySearch);
-    connect(clearButton, &QPushButton::clicked, this, [this]()
-            {
-        searchEdit->clear();
-        sendCommandToCli("LIST");
-        sendCommandToCli("STATS"); });
-    connect(sortDifficultyButton, &QPushButton::clicked, this, &MainWindow::sortByDifficulty);
-    connect(sortTimeButton, &QPushButton::clicked, this, &MainWindow::sortByTime);
-    connect(sortRatingButton, &QPushButton::clicked, this, &MainWindow::sortByRating);
-    connect(searchEdit, &QLineEdit::returnPressed, this, &MainWindow::applySearch);
+        splitter->addWidget(tablePanel);
+        splitter->addWidget(statsScroll);
+        splitter->setStretchFactor(0, 1);
+        splitter->setStretchFactor(1, 0);
+        splitter->setSizes({860, 240});
+        rootLayout->addWidget(splitter, 1);
+
+        mw->setCentralWidget(root);
+        mw->statusBar()->addWidget(statusLabel, 1);
+
+        // Conexiuni folosind MainWindow (mw) ca receptor
+        QObject::connect(addButton, &QPushButton::clicked, mw, &MainWindow::addProblem);
+        QObject::connect(openButton, &QPushButton::clicked, mw, &MainWindow::loadFile);
+        QObject::connect(saveButton, &QPushButton::clicked, mw, &MainWindow::saveFile);
+        QObject::connect(searchButton, &QPushButton::clicked, mw, &MainWindow::applySearch);
+        QObject::connect(clearButton, &QPushButton::clicked, mw, [this, mw]()
+                         {
+            searchEdit->clear();
+            mw->applySearch(); });
+        QObject::connect(sortDifficultyButton, &QPushButton::clicked, mw, &MainWindow::sortByDifficulty);
+        QObject::connect(sortTimeButton, &QPushButton::clicked, mw, &MainWindow::sortByTime);
+        QObject::connect(sortRatingButton, &QPushButton::clicked, mw, &MainWindow::sortByRating);
+        QObject::connect(searchEdit, &QLineEdit::returnPressed, mw, &MainWindow::applySearch);
+    }
+};
+
+// ---------------------------------------------------------
+
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent),
+      ui(std::make_unique<MainWindowImpl>()),
+      cliProcess(new QProcess(this))
+{
+    ui->setupUi(this);
+
+    QString appDir = QCoreApplication::applicationDirPath();
+    cliProcess->setWorkingDirectory(appDir);
+
+    QString cliPath = "";
+    QStringList possiblePaths = {
+        appDir + "/AlgoTrackCli", appDir + "/AlgoTrackCli.exe",
+        appDir + "/../AlgoTrackCli", appDir + "/../AlgoTrackCli.exe",
+        appDir + "/../../AlgoTrackCli", appDir + "/../../AlgoTrackCli.exe"};
+
+    bool found = false;
+    for (const QString &path : possiblePaths)
+    {
+        if (QFile::exists(path))
+        {
+            cliPath = path;
+            found = true;
+            break;
+        }
+    }
+
+    if (!found)
+    {
+        qWarning() << "Critical: Backend AlgoTrackCli not found near GUI.";
+        ui->statusLabel->setText("Error: Backend not found.");
+    }
+    else
+    {
+        connect(cliProcess, &QProcess::readyReadStandardOutput, this, &MainWindow::handleCliOutput);
+        cliProcess->start(cliPath);
+    }
+}
+
+MainWindow::~MainWindow()
+{
+    if (cliProcess->state() == QProcess::Running)
+    {
+        sendCommandToCli("EXIT");
+        cliProcess->waitForFinished(2000);
+    }
 }
 
 void MainWindow::sendCommandToCli(const QString &command)
@@ -300,10 +315,8 @@ void MainWindow::sendCommandToCli(const QString &command)
     }
 }
 
-// --- WHOLE MESSAGE HANDLING ---
 void MainWindow::handleCliOutput()
 {
-    // Ne asigurăm că procesăm doar mesaje întregi, prevenind erorile de stream
     while (cliProcess->canReadLine())
     {
         QString line = QString::fromUtf8(cliProcess->readLine()).trimmed();
@@ -315,48 +328,47 @@ void MainWindow::handleCliOutput()
     }
 }
 
-// --- TYPE-SAFE DISPATCHER ---
 void MainWindow::processMessage(const IPC::Message &msg)
 {
     std::visit(overloaded{[this](const IPC::Ready &)
                           {
                               sendCommandToCli("LIST");
                               sendCommandToCli("STATS");
-                              statusLabel->setText("Connected to backend.");
+                              ui->statusLabel->setText("Connected to backend.");
                           },
                           [this](const IPC::NotFound &)
                           {
-                              table->setRowCount(0);
-                              statusLabel->setText("Nu s-au găsit probleme pentru căutarea selectată.");
+                              ui->table->setRowCount(0);
+                              ui->statusLabel->setText("Nu s-au găsit probleme pentru căutarea selectată.");
                           },
                           [this](const IPC::FoundExact &m)
                           {
                               populateTableSingleRow(m.csv);
-                              statusLabel->setText(QString("Potrivire exactă găsită: %1").arg(m.name.toUpper()));
+                              ui->statusLabel->setText(QString("Potrivire exactă găsită: %1").arg(m.name.toUpper()));
                           },
                           [this](const IPC::FoundFuzzy &m)
                           {
                               populateTableSingleRow(m.csv);
-                              statusLabel->setText(QString("Fuzzy Match găsit (Levenshtein): %1").arg(m.name.toUpper()));
+                              ui->statusLabel->setText(QString("Fuzzy Match găsit (Levenshtein): %1").arg(m.name.toUpper()));
                           },
                           [this](const IPC::StartList &)
                           {
                               readingList = true;
-                              table->setRowCount(0);
+                              ui->table->setRowCount(0);
                           },
                           [this](const IPC::EndList &)
                           {
                               readingList = false;
-                              statusLabel->setText(QString("%1 probleme încărcate").arg(table->rowCount()));
+                              ui->statusLabel->setText(QString("%1 probleme încărcate").arg(ui->table->rowCount()));
 
                               int calculatedTotalTime = 0;
-                              for (int r = 0; r < table->rowCount(); ++r)
+                              for (int r = 0; r < ui->table->rowCount(); ++r)
                               {
-                                  if (table->item(r, 5))
-                                      calculatedTotalTime += table->item(r, 5)->text().toInt();
+                                  if (ui->table->item(r, 5))
+                                      calculatedTotalTime += ui->table->item(r, 5)->text().toInt();
                               }
                               if (calculatedTotalTime > 0)
-                                  timeValue->setText(QString("%1m").arg(calculatedTotalTime));
+                                  ui->timeValue->setText(QString("%1m").arg(calculatedTotalTime));
                           },
                           [this](const IPC::StartStats &)
                           {
@@ -367,7 +379,7 @@ void MainWindow::processMessage(const IPC::Message &msg)
                           {
                               readingStats = false;
                               statsHtmlBuffer += "</div>";
-                              statsLabel->setText(statsHtmlBuffer);
+                              ui->statsLabel->setText(statsHtmlBuffer);
                           },
                           [this](const IPC::Success &)
                           {
@@ -390,19 +402,19 @@ void MainWindow::processMessage(const IPC::Message &msg)
 
 void MainWindow::populateTableSingleRow(const QString &csv)
 {
-    table->clearContents();
-    table->setRowCount(0);
+    ui->table->clearContents();
+    ui->table->setRowCount(0);
     addCsvRowToTable(csv);
-    table->viewport()->update();
-    table->selectRow(0);
+    ui->table->viewport()->update();
+    ui->table->selectRow(0);
 }
 
 void MainWindow::addCsvRowToTable(const QString &csv)
 {
-    int row = table->rowCount();
-    table->insertRow(row);
+    int row = ui->table->rowCount();
+    ui->table->insertRow(row);
     QStringList fields = csv.split(',');
-    for (int i = 0; i < fields.size() && i < table->columnCount(); ++i)
+    for (int i = 0; i < fields.size() && i < ui->table->columnCount(); ++i)
     {
         QString cleanField = fields[i].trimmed();
         if (cleanField.startsWith('"') && cleanField.endsWith('"'))
@@ -422,7 +434,7 @@ void MainWindow::addCsvRowToTable(const QString &csv)
         }
         auto *item = new QTableWidgetItem(cleanField);
         item->setToolTip(cleanField);
-        table->setItem(row, i, item);
+        ui->table->setItem(row, i, item);
     }
 }
 
@@ -435,17 +447,17 @@ void MainWindow::processStatLine(const QString &line)
     QString val = parts[1];
 
     if (key == "total")
-        totalValue->setText(val);
+        ui->totalValue->setText(val);
     else if (key == "solved")
-        solvedValue->setText(val);
+        ui->solvedValue->setText(val);
     else if (key == "avg_rating")
     {
         bool ok;
         double rVal = val.toDouble(&ok);
-        ratingValue->setText(ok ? QString::number(rVal, 'f', 2) : val);
+        ui->ratingValue->setText(ok ? QString::number(rVal, 'f', 2) : val);
     }
     else if (key == "total_time" && val.toInt() > 0)
-        timeValue->setText(val + "m");
+        ui->timeValue->setText(val + "m");
     else if (key == "failed")
         statsHtmlBuffer += QString("<div style='margin-bottom:6px;'><b>Failed:</b> <span style='color:#ef4444; font-weight:600;'>%1</span></div>").arg(val);
     else if (key == "progress")
@@ -470,7 +482,7 @@ void MainWindow::addProblem()
 
 void MainWindow::deleteSelectedProblem()
 {
-    int row = table->currentRow();
+    int row = ui->table->currentRow();
     if (row < 0)
     {
         QMessageBox::information(this, "Nicio selecție", "Selectează o problemă mai întâi.");
@@ -484,10 +496,11 @@ void MainWindow::deleteSelectedProblem()
 
 void MainWindow::applySearch()
 {
-    QString query = searchEdit->text().trimmed();
+    QString query = ui->searchEdit->text().trimmed();
     if (query.isEmpty())
     {
         sendCommandToCli("LIST");
+        sendCommandToCli("STATS");
         return;
     }
     sendCommandToCli("SEARCH " + query);

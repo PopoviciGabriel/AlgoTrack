@@ -6,10 +6,7 @@
 #include <QString>
 #include <QStringList>
 #include <variant>
-
-class QTableWidget;
-class QLineEdit;
-class QLabel;
+#include <memory>
 
 // Tipuri puternice pentru mesajele IPC
 namespace IPC
@@ -70,9 +67,13 @@ struct overloaded : Ts...
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
+// Forward declaration pentru structura care ascunde interfața vizuală (Pimpl)
+struct MainWindowImpl;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+    friend struct MainWindowImpl;
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
@@ -93,27 +94,15 @@ private slots:
     void exportFile();
 
 private:
-    QTableWidget *table;
-    QLineEdit *searchEdit;
-    QLabel *statusLabel;
-    QLabel *statsLabel;
-    QLabel *totalValue;
-    QLabel *solvedValue;
-    QLabel *ratingValue;
-    QLabel *timeValue;
-
+    std::unique_ptr<MainWindowImpl> ui; // Ascunde toate pointerele spre QTableWidget, etc.
     QProcess *cliProcess;
 
-    // Stări pentru parsarea liniilor de date
     bool readingList = false;
     bool readingStats = false;
     QString statsHtmlBuffer;
 
-    void buildUi();
     void sendCommandToCli(const QString &command);
     void processMessage(const IPC::Message &msg);
-
-    // Funcții ajutătoare
     void addCsvRowToTable(const QString &csv);
     void populateTableSingleRow(const QString &csv);
     void processStatLine(const QString &line);
