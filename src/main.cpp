@@ -2,9 +2,9 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <map>
 #include "ProblemManager.h"
 #include "ProblemRepository.h"
-#include "Statistics.h"
 #include "Utils.h"
 
 constexpr const char *DATA_FILE = "data/problems.csv";
@@ -12,6 +12,61 @@ constexpr const char *DATA_FILE = "data/problems.csv";
 void autoSave(const ProblemManager &manager)
 {
     ProblemRepository::saveToFile(DATA_FILE, manager.getAllProblems());
+}
+
+void printStats(const ProblemManager &manager)
+{
+    std::cout << "START_STATS\n";
+    const auto &problems = manager.getAllProblems();
+    std::cout << "total:" << problems.size() << "\n";
+
+    int solved = 0, failed = 0, inprog = 0;
+    int totalTime = 0;
+    double ratingSum = 0;
+
+    int easy = 0, medium = 0, hard = 0;
+    std::map<std::string, int> dateCounts;
+
+    for (const auto &p : problems)
+    {
+        if (p.getStatus() == Status::Solved)
+            solved++;
+        else if (p.getStatus() == Status::Failed)
+            failed++;
+        else
+            inprog++;
+
+        if (p.getDifficulty() == Difficulty::Easy)
+            easy++;
+        else if (p.getDifficulty() == Difficulty::Medium)
+            medium++;
+        else
+            hard++;
+
+        dateCounts[p.getDate()]++;
+        totalTime += p.getTimeSpent();
+        ratingSum += p.getRating();
+    }
+
+    std::cout << "solved:" << solved << "\n";
+    std::cout << "failed:" << failed << "\n";
+    std::cout << "progress:" << inprog << "\n";
+    std::cout << "total_time:" << totalTime << "\n";
+    if (!problems.empty())
+    {
+        std::cout << "avg_rating:" << (ratingSum / problems.size()) << "\n";
+        std::cout << "avg_time:" << (totalTime / problems.size()) << "\n";
+    }
+
+    std::cout << "diff_easy:" << easy << "\n";
+    std::cout << "diff_medium:" << medium << "\n";
+    std::cout << "diff_hard:" << hard << "\n";
+
+    for (auto const &[dateStr, count] : dateCounts)
+    {
+        std::cout << "date_freq:" << dateStr << "|" << count << "\n";
+    }
+    std::cout << "END_STATS\n";
 }
 
 int main()
@@ -23,17 +78,12 @@ int main()
     {
         loadResult = ProblemRepository::loadFromFile("qt_app/data/problems.csv");
     }
-
     if (loadResult.fileOpened)
     {
         manager.setProblems(loadResult.problems);
     }
-    else
-    {
-        std::cout << "ERROR: Nu s-a putut deschide fisierul de date. Aplicatia va porni goala." << std::endl;
-    }
 
-    std::cout << "READY" << std::endl;
+    std::cout << "READY\n";
 
     std::string line;
     while (std::getline(std::cin, line))
@@ -47,236 +97,133 @@ int main()
         ss >> command;
 
         if (command == "EXIT")
-        {
-            std::cout << "OK: BYE" << std::endl;
             break;
-        }
         else if (command == "LIST")
         {
-            const auto &all = manager.getAllProblems();
-            std::cout << "START_LIST" << std::endl;
-            for (const auto &p : all)
-            {
-                std::cout << p.toCSV() << std::endl;
-            }
-            std::cout << "END_LIST" << std::endl;
+            std::cout << "START_LIST\n";
+            for (const auto &p : manager.getAllProblems())
+                std::cout << p.toCSV() << "\n";
+            std::cout << "END_LIST\n";
         }
+        else if (command == "STATS")
+            printStats(manager);
         else if (command == "ADD")
         {
-            std::string csvData;
-            std::getline(ss, csvData);
-            csvData = trim(csvData);
-
+            std::string csv;
+            std::getline(ss, csv);
             try
             {
                 Problem p;
-                p.fromCSV(csvData);
-
-                if (manager.addProblem(p) == AddProblemResult::Duplicate)
-                {
-                    std::cout << "ERROR: DUPLICATE" << std::endl;
-                }
-                else
+                p.fromCSV(trim(csv));
+                if (manager.addProblem(p) == AddProblemResult::Success)
                 {
                     autoSave(manager);
-                    std::cout << "SUCCESS: ADDED" << std::endl;
+                    std::cout << "SUCCESS: ADDED\n";
                 }
+                else
+                    std::cout << "ERROR: Duplicate problem\n";
             }
-            catch (const std::exception &e)
+            catch (...)
             {
-                std::cout << "ERROR: " << e.what() << std::endl;
-            }
-        }
-        else if (command == "SEARCH")
-        {
-            std::string name;
-            std::getline(ss, name);
-            name = trim(name);
-
-            SearchResult res = manager.findByName(name);
-            if (res.exactFound)
-            {
-                std::cout << "FOUND_EXACT|" << manager.getProblemAt(res.index)->getName() << "|" << manager.getProblemAt(res.index)->toCSV() << std::endl;
-            }
-            else if (res.fuzzyFound)
-            {
-                // CORECTAT: Trimitem linia CSV completă prin toCSV() și la Fuzzy Match, nu doar numele!
-                std::cout << "FOUND_FUZZY|" << manager.getProblemAt(res.index)->getName() << "|" << manager.getProblemAt(res.index)->toCSV() << std::endl;
-            }
-            else
-            {
-                std::cout << "NOT_FOUND" << std::endl;
+                std::cout << "ERROR: Invalid CSV format\n";
             }
         }
         else if (command == "DELETE_INDEX")
         {
-            int index;
-            if (ss >> index)
+            int idx;
+            if (ss >> idx && manager.deleteAtIndex(idx))
             {
-                if (manager.deleteAtIndex(index))
-                {
-                    autoSave(manager);
-                    std::cout << "SUCCESS: DELETED" << std::endl;
-                }
-                else
-                {
-                    std::cout << "ERROR: INVALID_INDEX" << std::endl;
-                }
+                autoSave(manager);
+                std::cout << "SUCCESS: DELETED\n";
             }
+            else
+                std::cout << "ERROR: Invalid index\n";
         }
-        else if (command == "UPDATE_STATUS")
+        else if (command == "SEARCH")
         {
-            int index;
-            std::string statusStr;
-            if (ss >> index)
+            std::string query;
+            std::getline(ss, query);
+            std::vector<Problem> results = manager.searchAdvanced(trim(query));
+            if (results.empty())
+                std::cout << "NOT_FOUND\n";
+            else
             {
-                std::getline(ss, statusStr);
-                statusStr = trim(statusStr);
-                try
-                {
-                    Status newStatus = parseStatus(statusStr);
-                    if (manager.updateStatusAtIndex(index, newStatus))
-                    {
-                        autoSave(manager);
-                        std::cout << "SUCCESS: STATUS_UPDATED" << std::endl;
-                    }
-                    else
-                    {
-                        std::cout << "ERROR: INVALID_INDEX" << std::endl;
-                    }
-                }
-                catch (...)
-                {
-                    std::cout << "ERROR: INVALID_STATUS" << std::endl;
-                }
+                std::cout << "START_LIST\n";
+                for (const auto &p : results)
+                    std::cout << p.toCSV() << "\n";
+                std::cout << "END_LIST\n";
             }
-        }
-        else if (command == "UPDATE_NOTES")
-        {
-            int index;
-            std::string notes;
-            if (ss >> index)
-            {
-                std::getline(ss, notes);
-                notes = trim(notes);
-                if (manager.updateNotesAtIndex(index, notes))
-                {
-                    autoSave(manager);
-                    std::cout << "SUCCESS: NOTES_UPDATED" << std::endl;
-                }
-                else
-                {
-                    std::cout << "ERROR: INVALID_INDEX" << std::endl;
-                }
-            }
-        }
-        else if (command == "STATS")
-        {
-            StatisticsSummary stats = calculateStatistics(manager.getAllProblems());
-            std::cout << "START_STATS" << std::endl;
-            std::cout << "total:" << stats.totalProblems << std::endl;
-            std::cout << "solved:" << stats.solved << std::endl;
-            std::cout << "failed:" << stats.failed << std::endl;
-            std::cout << "progress:" << stats.inProgress << std::endl;
-            std::cout << "avg_time:" << stats.averageTime << std::endl;
-            std::cout << "avg_rating:" << stats.averageRating << std::endl;
-            std::cout << "most_used_tag:" << (stats.mostUsedTagCount > 0 ? stats.mostUsedTag : "none") << std::endl;
-            std::cout << "END_STATS" << std::endl;
         }
         else if (command == "SORT_DIFFICULTY")
         {
             manager.sortByDifficulty();
-            autoSave(manager);
-            std::cout << "SUCCESS: SORTED" << std::endl;
+            std::cout << "SUCCESS\n";
         }
         else if (command == "SORT_TIME")
         {
             manager.sortByTime();
-            autoSave(manager);
-            std::cout << "SUCCESS: SORTED" << std::endl;
+            std::cout << "SUCCESS\n";
         }
         else if (command == "SORT_RATING")
         {
             manager.descendingSortByRating();
-            autoSave(manager);
-            std::cout << "SUCCESS: SORTED" << std::endl;
+            std::cout << "SUCCESS\n";
         }
         else if (command == "OPEN")
         {
             std::string path;
             std::getline(ss, path);
-            path = trim(path);
-
-            LoadResult res = ProblemRepository::loadFromFile(path);
-            if (res.fileOpened)
+            LoadResult lr = ProblemRepository::loadFromFile(trim(path));
+            if (lr.fileOpened)
             {
-                manager.setProblems(res.problems);
-                std::cout << "SUCCESS: OPENED" << std::endl;
+                manager.setProblems(lr.problems);
+                autoSave(manager);
+                std::cout << "SUCCESS: OPENED\n";
             }
             else
-            {
-                std::cout << "ERROR: Cannot open file" << std::endl;
-            }
+                std::cout << "ERROR: Cannot open file\n";
         }
         else if (command == "SAVE")
         {
-            autoSave(manager);
-            std::cout << "SUCCESS: SAVED" << std::endl;
+            if (ProblemRepository::saveToFile(DATA_FILE, manager.getAllProblems()))
+                std::cout << "SUCCESS: SAVED\n";
+            else
+                std::cout << "ERROR: Cannot save file\n";
         }
         else if (command == "SAVE_AS")
         {
             std::string path;
             std::getline(ss, path);
-            path = trim(path);
-
-            if (ProblemRepository::saveToFile(path, manager.getAllProblems()))
-            {
-                std::cout << "SUCCESS: SAVED_AS" << std::endl;
-            }
+            if (ProblemRepository::saveToFile(trim(path), manager.getAllProblems()))
+                std::cout << "SUCCESS: SAVED_AS\n";
             else
-            {
-                std::cout << "ERROR: Cannot save to file" << std::endl;
-            }
+                std::cout << "ERROR: Cannot save to file\n";
         }
         else if (command == "IMPORT")
         {
             std::string path;
             std::getline(ss, path);
-            path = trim(path);
-
             std::vector<Problem> tempProblems = manager.getAllProblems();
-            ImportResult res = ProblemRepository::importFromFile(path, tempProblems);
-            if (res.fileOpened)
+            if (ProblemRepository::importFromFile(trim(path), tempProblems).fileOpened)
             {
                 manager.setProblems(tempProblems);
                 autoSave(manager);
-                std::cout << "SUCCESS: IMPORTED" << std::endl;
+                std::cout << "SUCCESS: IMPORTED\n";
             }
             else
-            {
-                std::cout << "ERROR: Import failed" << std::endl;
-            }
+                std::cout << "ERROR: Import failed\n";
         }
         else if (command == "EXPORT")
         {
             std::string path;
             std::getline(ss, path);
-            path = trim(path);
-
-            if (ProblemRepository::exportToFile(path, manager.getAllProblems()))
-            {
-                std::cout << "SUCCESS: EXPORTED" << std::endl;
-            }
+            if (ProblemRepository::exportToFile(trim(path), manager.getAllProblems()))
+                std::cout << "SUCCESS: EXPORTED\n";
             else
-            {
-                std::cout << "ERROR: Export failed" << std::endl;
-            }
+                std::cout << "ERROR: Export failed\n";
         }
         else
-        {
-            std::cout << "ERROR: UNKNOWN_COMMAND" << std::endl;
-        }
+            std::cout << "ERROR: UNKNOWN_COMMAND\n";
     }
-
     return 0;
 }

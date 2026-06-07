@@ -28,6 +28,10 @@ public:
     const std::vector<Problem> &getAllProblems() const;
     const Problem *getProblemAt(int index) const;
     SearchResult findByName(const std::string &name) const;
+
+    // Motorul nou de căutare avansată
+    std::vector<Problem> searchAdvanced(const std::string &query) const;
+
     bool deleteAtIndex(int index);
 
     std::vector<Problem> filterByTag(const std::string &tag) const;

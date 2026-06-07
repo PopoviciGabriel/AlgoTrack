@@ -23,7 +23,18 @@
 #include <QTableWidgetItem>
 #include <QToolBar>
 #include <QVBoxLayout>
+#include <QTextEdit>
+#include <QItemSelectionModel>
 #include <QDebug>
+
+#include <QChartView>
+#include <QPieSeries>
+#include <QPieSlice>
+#include <QChart>
+#include <QPainter>
+#include <QDate>
+#include <QToolTip>
+#include <QMouseEvent>
 
 IPC::Message IPC::parseMessage(const QString &line)
 {
@@ -58,9 +69,112 @@ IPC::Message IPC::parseMessage(const QString &line)
                 return FoundFuzzy{name, csv};
         }
     }
-
     return DataLine{line};
 }
+
+class HeatmapWidget : public QWidget
+{
+public:
+    HeatmapWidget(QWidget *parent = nullptr) : QWidget(parent)
+    {
+        setMinimumHeight(150);
+        setMinimumWidth(240);
+        setMouseTracking(true);
+    }
+
+    void setData(const QMap<QString, int> &data)
+    {
+        counts = data;
+        update();
+    }
+
+protected:
+    void paintEvent(QPaintEvent *) override
+    {
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+
+        int squareSize = 12;
+        int spacing = 4;
+        int columns = 16;
+        int rows = 7;
+
+        QDate today = QDate::currentDate();
+        QDate start = today.addDays(-(columns * 7 - 1));
+        while (start.dayOfWeek() != 1)
+            start = start.addDays(-1);
+
+        int xOffset = 6;
+        int yOffset = 26;
+
+        painter.setPen(QColor(100, 116, 139));
+        QFont font = painter.font();
+        font.setPointSize(9);
+        font.setBold(true);
+        painter.setFont(font);
+        painter.drawText(xOffset, 14, "Activity (Last 4 months)");
+
+        for (int col = 0; col < columns; ++col)
+        {
+            for (int row = 0; row < rows; ++row)
+            {
+                QDate d = start.addDays(col * 7 + row);
+                if (d > today)
+                    break;
+
+                int count = counts.value(d.toString("dd-MM-yyyy"), 0);
+                QColor color = QColor(235, 237, 240);
+                if (count == 1)
+                    color = QColor(155, 233, 168);
+                else if (count == 2)
+                    color = QColor(64, 196, 99);
+                else if (count >= 3)
+                    color = QColor(33, 110, 57);
+
+                painter.setBrush(color);
+                painter.setPen(Qt::NoPen);
+                QRect rect(xOffset + col * (squareSize + spacing),
+                           yOffset + row * (squareSize + spacing),
+                           squareSize, squareSize);
+                painter.drawRoundedRect(rect, 2, 2);
+            }
+        }
+    }
+
+    void mouseMoveEvent(QMouseEvent *event) override
+    {
+        int squareSize = 12;
+        int spacing = 4;
+        int columns = 16;
+        int rows = 7;
+        QDate today = QDate::currentDate();
+        QDate start = today.addDays(-(columns * 7 - 1));
+        while (start.dayOfWeek() != 1)
+            start = start.addDays(-1);
+
+        int xOffset = 6;
+        int yOffset = 26;
+        int col = (event->pos().x() - xOffset) / (squareSize + spacing);
+        int row = (event->pos().y() - yOffset) / (squareSize + spacing);
+
+        if (col >= 0 && col < columns && row >= 0 && row < rows)
+        {
+            QDate d = start.addDays(col * 7 + row);
+            if (d <= today)
+            {
+                int count = counts.value(d.toString("dd-MM-yyyy"), 0);
+                QString text = count == 0 ? QString("No problems on %1").arg(d.toString("MMM d, yyyy"))
+                                          : QString("%1 problems on %2").arg(count).arg(d.toString("MMM d, yyyy"));
+                QToolTip::showText(event->globalPosition().toPoint(), text, this);
+                return;
+            }
+        }
+        QToolTip::hideText();
+    }
+
+private:
+    QMap<QString, int> counts;
+};
 
 static QPushButton *makeCommandButton(const QString &text, QWidget *parent)
 {
@@ -74,23 +188,17 @@ static QFrame *makeMetricCard(const QString &label, QLabel *value, QWidget *pare
 {
     auto *card = new QFrame(parent);
     card->setObjectName("metricCard");
-
     auto *labelWidget = new QLabel(label, card);
     labelWidget->setObjectName("metricLabel");
     value->setObjectName("metricValue");
-
     auto *layout = new QVBoxLayout(card);
     layout->setContentsMargins(16, 12, 16, 12);
     layout->setSpacing(4);
     layout->addWidget(labelWidget);
     layout->addWidget(value);
-
     return card;
 }
 
-// ---------------------------------------------------------
-// Pimpl Pattern: Stocăm UI-ul principal izolat de antet
-// ---------------------------------------------------------
 struct MainWindowImpl
 {
     QTableWidget *table;
@@ -102,11 +210,20 @@ struct MainWindowImpl
     QLabel *ratingValue;
     QLabel *timeValue;
 
+    // NOU: Pointeri pentru panoul inspector de notițe
+    QFrame *detailsContainer;
+    QLabel *detailsNameLabel;
+    QTextEdit *detailsNotesText;
+
+    QPieSeries *pieSeries;
+    QChartView *pieChartView;
+    HeatmapWidget *heatmap;
+
     void setupUi(MainWindow *mw)
     {
         mw->setWindowTitle("AlgoTrack");
-        mw->resize(1180, 700);
-        mw->setMinimumSize(780, 520);
+        mw->resize(1180, 750);
+        mw->setMinimumSize(850, 600);
 
         table = new QTableWidget(mw);
         searchEdit = new QLineEdit(mw);
@@ -144,7 +261,6 @@ struct MainWindowImpl
         rootLayout->setSpacing(12);
 
         auto *topRow = new QHBoxLayout;
-
         auto *titleBox = new QVBoxLayout;
         auto *title = new QLabel("AlgoTrack", mw);
         title->setObjectName("appTitle");
@@ -176,7 +292,7 @@ struct MainWindowImpl
         metrics->addWidget(makeMetricCard("Total time", timeValue, mw), 0, 3);
         rootLayout->addLayout(metrics);
 
-        searchEdit->setPlaceholderText("Search by name, platform, tag, status, notes...");
+        searchEdit->setPlaceholderText("Search by name, platform, tag, status... (Try diff:hard platform:leetcode)");
         searchEdit->setMinimumHeight(40);
 
         auto *searchButton = makeCommandButton("Search", mw);
@@ -196,6 +312,9 @@ struct MainWindowImpl
         searchRow->addWidget(sortRatingButton);
         rootLayout->addLayout(searchRow);
 
+        // ==========================================
+        // SMART GRID SYSTEM (Rezolvarea crampelor)
+        // ==========================================
         table->setColumnCount(9);
         table->setHorizontalHeaderLabels({"Name", "Platform", "Difficulty", "Tags", "Status",
                                           "Time", "Date", "Rating", "Notes"});
@@ -204,51 +323,142 @@ struct MainWindowImpl
         table->setEditTriggers(QAbstractItemView::NoEditTriggers);
         table->setAlternatingRowColors(true);
         table->verticalHeader()->setVisible(false);
-        table->horizontalHeader()->setStretchLastSection(false);
-        table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-        table->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+        // ACTIVAM BARA DE SCROLL ORIZONTALĂ LA NEVOIE
+        table->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         table->setWordWrap(false);
 
+        auto header = table->horizontalHeader();
+        // Redimensionare inteligentă pe fiecare coloană individual
+        header->setSectionResizeMode(0, QHeaderView::Interactive);      // Name: se poate trage manual
+        header->setSectionResizeMode(1, QHeaderView::ResizeToContents); // Platform: exact cât textul
+        header->setSectionResizeMode(2, QHeaderView::ResizeToContents); // Difficulty: exact cât textul
+        header->setSectionResizeMode(3, QHeaderView::Interactive);      // Tags: manual/proporțional
+        header->setSectionResizeMode(4, QHeaderView::ResizeToContents); // Status: exact
+        header->setSectionResizeMode(5, QHeaderView::ResizeToContents); // Time: exact
+        header->setSectionResizeMode(6, QHeaderView::ResizeToContents); // Date: exact
+        header->setSectionResizeMode(7, QHeaderView::ResizeToContents); // Rating: exact
+        header->setSectionResizeMode(8, QHeaderView::Stretch);          // Notes: absoarbe restul spațiului ecranului
+
+        // Oferim niște lățimi implicite sănătoase coloanelor flexibile
+        table->setColumnWidth(0, 200);
+        table->setColumnWidth(3, 140);
+
+        // ==========================================
+        // PANOU INSPECTOR DETALII (Stil 2026)
+        // ==========================================
+        detailsContainer = new QFrame(mw);
+        detailsContainer->setObjectName("detailsContainer");
+        detailsContainer->setStyleSheet(
+            "QFrame#detailsContainer { "
+            "background-color: #ffffff; border: 1px solid #cbd5e1; "
+            "border-radius: 8px; margin-top: 4px; }");
+        detailsContainer->setVisible(false); // Ascuns din start
+
+        auto *detailsLayout = new QVBoxLayout(detailsContainer);
+        detailsLayout->setContentsMargins(16, 12, 16, 12);
+
+        detailsNameLabel = new QLabel(detailsContainer);
+        detailsNameLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #0f172a;");
+
+        detailsNotesText = new QTextEdit(detailsContainer);
+        detailsNotesText->setReadOnly(true);
+        detailsNotesText->setStyleSheet("border: none; background: transparent; color: #475569; font-size: 13px;");
+        detailsNotesText->setMaximumHeight(70);
+
+        detailsLayout->addWidget(detailsNameLabel);
+        detailsLayout->addWidget(detailsNotesText);
+
+        // Ansamblarea pe partea stângă (Tabel sus + Panou Inspector jos)
         auto *tablePanel = new QFrame(mw);
         tablePanel->setObjectName("tablePanel");
         auto *tableLayout = new QVBoxLayout(tablePanel);
         tableLayout->setContentsMargins(1, 1, 1, 1);
+        tableLayout->setSpacing(6);
         tableLayout->addWidget(table);
+        tableLayout->addWidget(detailsContainer);
+
+        // Legătura magică: Când dai click pe un rând, actualizăm panoul
+        QObject::connect(table->selectionModel(), &QItemSelectionModel::selectionChanged, mw, [this]()
+                         {
+            auto rows = table->selectionModel()->selectedRows();
+            if (rows.isEmpty()) {
+                detailsContainer->setVisible(false);
+                return;
+            }
+            int r = rows.first().row();
+            QString name = table->item(r, 0)->text();
+            QString tags = table->item(r, 3)->text();
+            QString notes = table->item(r, 8)->text();
+
+            detailsNameLabel->setText(QString("<span style='color:#0f172a;'>%1</span> <span style='color:#64748b; font-weight:normal; font-size:13px;'>&nbsp;|&nbsp; %2</span>").arg(name, tags));
+            detailsNotesText->setText(notes.isEmpty() ? "No notes added for this problem." : notes);
+            detailsContainer->setVisible(true); });
+
+        // --- Restul UI-ului de grafice rămâne neschimbat ---
+        QWidget *statsContainer = new QWidget(mw);
+        QVBoxLayout *statsLayout = new QVBoxLayout(statsContainer);
+        statsLayout->setContentsMargins(12, 12, 12, 12);
+        statsLayout->setSpacing(24);
 
         statsLabel->setObjectName("statsPanel");
-        statsLabel->setMinimumWidth(220);
-        statsLabel->setMaximumWidth(280);
         statsLabel->setAlignment(Qt::AlignTop | Qt::AlignLeft);
         statsLabel->setWordWrap(true);
+
+        pieSeries = new QPieSeries();
+        pieSeries->setHoleSize(0.35);
+        pieSeries->append("Easy", 0)->setBrush(QColor(34, 197, 94));
+        pieSeries->append("Medium", 0)->setBrush(QColor(234, 179, 8));
+        pieSeries->append("Hard", 0)->setBrush(QColor(239, 68, 68));
+
+        QChart *pieChart = new QChart();
+        pieChart->addSeries(pieSeries);
+        pieChart->setTitle("Difficulty Split");
+        pieChart->setTitleFont(QFont("Arial", 10, QFont::Bold));
+        pieChart->legend()->setAlignment(Qt::AlignBottom);
+        pieChart->legend()->setFont(QFont("Arial", 8));
+        pieChart->setMargins(QMargins(0, 0, 0, 0));
+        pieChart->setBackgroundRoundness(0);
+
+        pieChartView = new QChartView(pieChart, statsContainer);
+        pieChartView->setRenderHint(QPainter::Antialiasing);
+        pieChartView->setMinimumHeight(240);
+        pieChartView->setVisible(false);
+
+        heatmap = new HeatmapWidget(statsContainer);
+
+        statsLayout->addWidget(statsLabel);
+        statsLayout->addWidget(pieChartView);
+        statsLayout->addWidget(heatmap);
+        statsLayout->addStretch();
 
         auto *splitter = new QSplitter(mw);
         auto *statsScroll = new QScrollArea(mw);
         statsScroll->setObjectName("statsScroll");
-        statsScroll->setWidget(statsLabel);
+        statsScroll->setWidget(statsContainer);
         statsScroll->setWidgetResizable(true);
         statsScroll->setFrameShape(QFrame::NoFrame);
         statsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        statsScroll->setMinimumWidth(220);
-        statsScroll->setMaximumWidth(280);
+        statsScroll->setMinimumWidth(260);
+        statsScroll->setMaximumWidth(310);
 
         splitter->addWidget(tablePanel);
         splitter->addWidget(statsScroll);
         splitter->setStretchFactor(0, 1);
         splitter->setStretchFactor(1, 0);
-        splitter->setSizes({860, 240});
+        splitter->setSizes({860, 260});
         rootLayout->addWidget(splitter, 1);
 
         mw->setCentralWidget(root);
         mw->statusBar()->addWidget(statusLabel, 1);
 
-        // Conexiuni folosind MainWindow (mw) ca receptor
         QObject::connect(addButton, &QPushButton::clicked, mw, &MainWindow::addProblem);
         QObject::connect(openButton, &QPushButton::clicked, mw, &MainWindow::loadFile);
         QObject::connect(saveButton, &QPushButton::clicked, mw, &MainWindow::saveFile);
         QObject::connect(searchButton, &QPushButton::clicked, mw, &MainWindow::applySearch);
-        QObject::connect(clearButton, &QPushButton::clicked, mw, [this, mw]()
+        QObject::connect(clearButton, &QPushButton::clicked, mw, [mw]()
                          {
-            searchEdit->clear();
+            mw->ui->searchEdit->clear();
             mw->applySearch(); });
         QObject::connect(sortDifficultyButton, &QPushButton::clicked, mw, &MainWindow::sortByDifficulty);
         QObject::connect(sortTimeButton, &QPushButton::clicked, mw, &MainWindow::sortByTime);
@@ -256,8 +466,6 @@ struct MainWindowImpl
         QObject::connect(searchEdit, &QLineEdit::returnPressed, mw, &MainWindow::applySearch);
     }
 };
-
-// ---------------------------------------------------------
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -322,7 +530,6 @@ void MainWindow::handleCliOutput()
         QString line = QString::fromUtf8(cliProcess->readLine()).trimmed();
         if (line.isEmpty())
             continue;
-
         IPC::Message msg = IPC::parseMessage(line);
         processMessage(msg);
     }
@@ -373,13 +580,21 @@ void MainWindow::processMessage(const IPC::Message &msg)
                           [this](const IPC::StartStats &)
                           {
                               readingStats = true;
-                              statsHtmlBuffer = "<div style='font-size:20px; font-weight:800; color:#1e293b; margin-bottom:14px; border-bottom:2px solid #e2e8f0; padding-bottom:4px;'>Details</div><div style='font-size:14px; color:#334155; line-height:1.6;'>";
+                              statsHtmlBuffer = "<div style='font-size:18px; font-weight:800; color:#1e293b; margin-bottom:14px; border-bottom:2px solid #e2e8f0; padding-bottom:4px;'>Quick Details</div><div style='font-size:14px; color:#334155; line-height:1.6;'>";
+                              statEasy = statMedium = statHard = 0;
+                              statDates.clear();
                           },
                           [this](const IPC::EndStats &)
                           {
                               readingStats = false;
                               statsHtmlBuffer += "</div>";
                               ui->statsLabel->setText(statsHtmlBuffer);
+
+                              ui->pieSeries->slices().at(0)->setValue(statEasy);
+                              ui->pieSeries->slices().at(1)->setValue(statMedium);
+                              ui->pieSeries->slices().at(2)->setValue(statHard);
+                              ui->pieChartView->setVisible((statEasy + statMedium + statHard) > 0);
+                              ui->heatmap->setData(statDates);
                           },
                           [this](const IPC::Success &)
                           {
@@ -387,9 +602,7 @@ void MainWindow::processMessage(const IPC::Message &msg)
                               sendCommandToCli("STATS");
                           },
                           [this](const IPC::Error &m)
-                          {
-                              QMessageBox::critical(this, "Operation Failed", m.message);
-                          },
+                          { QMessageBox::critical(this, "Operation Failed", m.message); },
                           [this](const IPC::DataLine &m)
                           {
                               if (readingList)
@@ -422,9 +635,7 @@ void MainWindow::addCsvRowToTable(const QString &csv)
             cleanField = cleanField.mid(1, cleanField.size() - 2);
         }
         else
-        {
             cleanField.replace("\"", "");
-        }
         if (i == 7)
         {
             bool ok;
@@ -441,10 +652,10 @@ void MainWindow::addCsvRowToTable(const QString &csv)
 void MainWindow::processStatLine(const QString &line)
 {
     QStringList parts = line.split(':');
-    if (parts.size() != 2)
+    if (parts.size() < 2)
         return;
     QString key = parts[0];
-    QString val = parts[1];
+    QString val = line.mid(key.length() + 1).trimmed();
 
     if (key == "total")
         ui->totalValue->setText(val);
@@ -464,10 +675,18 @@ void MainWindow::processStatLine(const QString &line)
         statsHtmlBuffer += QString("<div style='margin-bottom:6px;'><b>In progress:</b> <span style='color:#f59e0b; font-weight:600;'>%1</span></div>").arg(val);
     else if (key == "avg_time")
         statsHtmlBuffer += QString("<div style='margin-bottom:6px;'><b>Average time:</b> %1 min</div>").arg(val);
-    else if (key == "most_used_tag")
-        statsHtmlBuffer += QString("<div style='margin-top:16px; border-top:1px dashed #e2e8f0; padding-top:8px;'><b style='color:#0f172a;'>Most used tag:</b></div><div style='display:inline-block; background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:600; margin-top:4px;'>%1</div>").arg(val);
-    else
-        statsHtmlBuffer += QString("<div style='margin-bottom:4px;'><b>%1:</b> %2</div>").arg(key, val);
+    else if (key == "diff_easy")
+        statEasy = val.toInt();
+    else if (key == "diff_medium")
+        statMedium = val.toInt();
+    else if (key == "diff_hard")
+        statHard = val.toInt();
+    else if (key == "date_freq")
+    {
+        QStringList dparts = val.split('|');
+        if (dparts.size() == 2)
+            statDates[dparts[0]] = dparts[1].toInt();
+    }
 }
 
 void MainWindow::addProblem()
@@ -475,7 +694,6 @@ void MainWindow::addProblem()
     auto dialog = AddProblemDialog::create(this);
     if (dialog->exec() != QDialog::Accepted)
         return;
-
     Problem p = dialog->problem();
     sendCommandToCli("ADD " + QString::fromStdString(p.toCSV()));
 }
@@ -490,7 +708,6 @@ void MainWindow::deleteSelectedProblem()
     }
     if (QMessageBox::question(this, "Șterge problemă", "Ești sigur că vrei să ștergi problema?") != QMessageBox::Yes)
         return;
-
     sendCommandToCli(QString("DELETE_INDEX %1").arg(row));
 }
 
@@ -528,7 +745,6 @@ void MainWindow::loadFile()
     if (!path.isEmpty())
         sendCommandToCli("OPEN " + path);
 }
-
 void MainWindow::saveFile() { sendCommandToCli("SAVE"); }
 void MainWindow::saveFileAs()
 {
@@ -536,14 +752,12 @@ void MainWindow::saveFileAs()
     if (!path.isEmpty())
         sendCommandToCli("SAVE_AS " + path);
 }
-
 void MainWindow::importFile()
 {
     QString path = QFileDialog::getOpenFileName(this, "Import CSV", QString(), "CSV files (*.csv);;All files (*.*)");
     if (!path.isEmpty())
         sendCommandToCli("IMPORT " + path);
 }
-
 void MainWindow::exportFile()
 {
     QString path = QFileDialog::getSaveFileName(this, "Export CSV", QString(), "CSV files (*.csv);;All files (*.*)");

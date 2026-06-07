@@ -5,10 +5,10 @@
 #include <QProcess>
 #include <QString>
 #include <QStringList>
+#include <QMap>
 #include <variant>
 #include <memory>
 
-// Tipuri puternice pentru mesajele IPC
 namespace IPC
 {
     struct Ready
@@ -58,7 +58,6 @@ namespace IPC
     Message parseMessage(const QString &line);
 }
 
-// Utilitar C++17 pentru std::visit
 template <class... Ts>
 struct overloaded : Ts...
 {
@@ -67,7 +66,6 @@ struct overloaded : Ts...
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
-// Forward declaration pentru structura care ascunde interfața vizuală (Pimpl)
 struct MainWindowImpl;
 
 class MainWindow : public QMainWindow
@@ -94,12 +92,17 @@ private slots:
     void exportFile();
 
 private:
-    std::unique_ptr<MainWindowImpl> ui; // Ascunde toate pointerele spre QTableWidget, etc.
+    std::unique_ptr<MainWindowImpl> ui;
     QProcess *cliProcess;
 
     bool readingList = false;
     bool readingStats = false;
     QString statsHtmlBuffer;
+
+    int statEasy = 0;
+    int statMedium = 0;
+    int statHard = 0;
+    QMap<QString, int> statDates;
 
     void sendCommandToCli(const QString &command);
     void processMessage(const IPC::Message &msg);
