@@ -90,6 +90,7 @@ private slots:
     void saveFileAs();
     void importFile();
     void exportFile();
+    void toggleDarkMode(); // Comutatorul global
 
 private:
     std::unique_ptr<MainWindowImpl> ui;
@@ -104,11 +105,14 @@ private:
     int statHard = 0;
     QMap<QString, int> statDates;
 
+    bool isDarkMode = false; // Starea temei
+
     void sendCommandToCli(const QString &command);
     void processMessage(const IPC::Message &msg);
     void addCsvRowToTable(const QString &csv);
     void populateTableSingleRow(const QString &csv);
     void processStatLine(const QString &line);
+    void updateThemeStyles(); // Mecanismul modern de re-randare
 };
 
 #endif // ALGOTRACK_MAIN_WINDOW_H

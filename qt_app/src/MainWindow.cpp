@@ -2,6 +2,7 @@
 #include "AddProblemDialog.h"
 #include "Problem.h"
 
+#include <QApplication> // NOU: Folosit pentru a seta tema global
 #include <QAction>
 #include <QCoreApplication>
 #include <QDir>
@@ -88,6 +89,12 @@ public:
         update();
     }
 
+    void setDarkTheme(bool dark)
+    {
+        isDark = dark;
+        update();
+    }
+
 protected:
     void paintEvent(QPaintEvent *) override
     {
@@ -107,7 +114,7 @@ protected:
         int xOffset = 6;
         int yOffset = 26;
 
-        painter.setPen(QColor(100, 116, 139));
+        painter.setPen(isDark ? QColor(205, 214, 244) : QColor(100, 116, 139));
         QFont font = painter.font();
         font.setPointSize(9);
         font.setBold(true);
@@ -123,13 +130,14 @@ protected:
                     break;
 
                 int count = counts.value(d.toString("dd-MM-yyyy"), 0);
-                QColor color = QColor(235, 237, 240);
+
+                QColor color = isDark ? QColor(30, 30, 46) : QColor(235, 237, 240);
                 if (count == 1)
-                    color = QColor(155, 233, 168);
+                    color = isDark ? QColor(14, 68, 41) : QColor(155, 233, 168);
                 else if (count == 2)
-                    color = QColor(64, 196, 99);
+                    color = isDark ? QColor(0, 109, 50) : QColor(64, 196, 99);
                 else if (count >= 3)
-                    color = QColor(33, 110, 57);
+                    color = isDark ? QColor(38, 166, 65) : QColor(33, 110, 57);
 
                 painter.setBrush(color);
                 painter.setPen(Qt::NoPen);
@@ -174,6 +182,7 @@ protected:
 
 private:
     QMap<QString, int> counts;
+    bool isDark = false;
 };
 
 static QPushButton *makeCommandButton(const QString &text, QWidget *parent)
@@ -210,7 +219,6 @@ struct MainWindowImpl
     QLabel *ratingValue;
     QLabel *timeValue;
 
-    // NOU: Pointeri pentru panoul inspector de notițe
     QFrame *detailsContainer;
     QLabel *detailsNameLabel;
     QTextEdit *detailsNotesText;
@@ -218,6 +226,7 @@ struct MainWindowImpl
     QPieSeries *pieSeries;
     QChartView *pieChartView;
     HeatmapWidget *heatmap;
+    QAction *themeAction;
 
     void setupUi(MainWindow *mw)
     {
@@ -254,6 +263,9 @@ struct MainWindowImpl
         toolbar->addSeparator();
         toolbar->addAction("Open", mw, &MainWindow::loadFile);
         toolbar->addAction("Save", mw, &MainWindow::saveFile);
+        toolbar->addSeparator();
+
+        themeAction = toolbar->addAction("Dark Mode", mw, &MainWindow::toggleDarkMode);
 
         auto *root = new QWidget(mw);
         auto *rootLayout = new QVBoxLayout(root);
@@ -292,7 +304,7 @@ struct MainWindowImpl
         metrics->addWidget(makeMetricCard("Total time", timeValue, mw), 0, 3);
         rootLayout->addLayout(metrics);
 
-        searchEdit->setPlaceholderText("Search by name, platform, tag, status... (Try diff:hard platform:leetcode)");
+        searchEdit->setPlaceholderText("Search by name, platform, tag... (e.g., diff:hard platform:leetcode)");
         searchEdit->setMinimumHeight(40);
 
         auto *searchButton = makeCommandButton("Search", mw);
@@ -312,9 +324,6 @@ struct MainWindowImpl
         searchRow->addWidget(sortRatingButton);
         rootLayout->addLayout(searchRow);
 
-        // ==========================================
-        // SMART GRID SYSTEM (Rezolvarea crampelor)
-        // ==========================================
         table->setColumnCount(9);
         table->setHorizontalHeaderLabels({"Name", "Platform", "Difficulty", "Tags", "Status",
                                           "Time", "Date", "Rating", "Notes"});
@@ -323,53 +332,38 @@ struct MainWindowImpl
         table->setEditTriggers(QAbstractItemView::NoEditTriggers);
         table->setAlternatingRowColors(true);
         table->verticalHeader()->setVisible(false);
-
-        // ACTIVAM BARA DE SCROLL ORIZONTALĂ LA NEVOIE
         table->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         table->setWordWrap(false);
+        table->setShowGrid(false);
 
         auto header = table->horizontalHeader();
-        // Redimensionare inteligentă pe fiecare coloană individual
-        header->setSectionResizeMode(0, QHeaderView::Interactive);      // Name: se poate trage manual
-        header->setSectionResizeMode(1, QHeaderView::ResizeToContents); // Platform: exact cât textul
-        header->setSectionResizeMode(2, QHeaderView::ResizeToContents); // Difficulty: exact cât textul
-        header->setSectionResizeMode(3, QHeaderView::Interactive);      // Tags: manual/proporțional
-        header->setSectionResizeMode(4, QHeaderView::ResizeToContents); // Status: exact
-        header->setSectionResizeMode(5, QHeaderView::ResizeToContents); // Time: exact
-        header->setSectionResizeMode(6, QHeaderView::ResizeToContents); // Date: exact
-        header->setSectionResizeMode(7, QHeaderView::ResizeToContents); // Rating: exact
-        header->setSectionResizeMode(8, QHeaderView::Stretch);          // Notes: absoarbe restul spațiului ecranului
+        header->setSectionResizeMode(0, QHeaderView::Interactive);
+        header->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+        header->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+        header->setSectionResizeMode(3, QHeaderView::Interactive);
+        header->setSectionResizeMode(4, QHeaderView::ResizeToContents);
+        header->setSectionResizeMode(5, QHeaderView::ResizeToContents);
+        header->setSectionResizeMode(6, QHeaderView::ResizeToContents);
+        header->setSectionResizeMode(7, QHeaderView::ResizeToContents);
+        header->setSectionResizeMode(8, QHeaderView::Stretch);
 
-        // Oferim niște lățimi implicite sănătoase coloanelor flexibile
         table->setColumnWidth(0, 200);
         table->setColumnWidth(3, 140);
 
-        // ==========================================
-        // PANOU INSPECTOR DETALII (Stil 2026)
-        // ==========================================
         detailsContainer = new QFrame(mw);
         detailsContainer->setObjectName("detailsContainer");
-        detailsContainer->setStyleSheet(
-            "QFrame#detailsContainer { "
-            "background-color: #ffffff; border: 1px solid #cbd5e1; "
-            "border-radius: 8px; margin-top: 4px; }");
-        detailsContainer->setVisible(false); // Ascuns din start
 
         auto *detailsLayout = new QVBoxLayout(detailsContainer);
         detailsLayout->setContentsMargins(16, 12, 16, 12);
 
         detailsNameLabel = new QLabel(detailsContainer);
-        detailsNameLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #0f172a;");
-
         detailsNotesText = new QTextEdit(detailsContainer);
         detailsNotesText->setReadOnly(true);
-        detailsNotesText->setStyleSheet("border: none; background: transparent; color: #475569; font-size: 13px;");
         detailsNotesText->setMaximumHeight(70);
 
         detailsLayout->addWidget(detailsNameLabel);
         detailsLayout->addWidget(detailsNotesText);
 
-        // Ansamblarea pe partea stângă (Tabel sus + Panou Inspector jos)
         auto *tablePanel = new QFrame(mw);
         tablePanel->setObjectName("tablePanel");
         auto *tableLayout = new QVBoxLayout(tablePanel);
@@ -378,8 +372,7 @@ struct MainWindowImpl
         tableLayout->addWidget(table);
         tableLayout->addWidget(detailsContainer);
 
-        // Legătura magică: Când dai click pe un rând, actualizăm panoul
-        QObject::connect(table->selectionModel(), &QItemSelectionModel::selectionChanged, mw, [this]()
+        QObject::connect(table->selectionModel(), &QItemSelectionModel::selectionChanged, mw, [this, mw]()
                          {
             auto rows = table->selectionModel()->selectedRows();
             if (rows.isEmpty()) {
@@ -391,12 +384,15 @@ struct MainWindowImpl
             QString tags = table->item(r, 3)->text();
             QString notes = table->item(r, 8)->text();
 
-            detailsNameLabel->setText(QString("<span style='color:#0f172a;'>%1</span> <span style='color:#64748b; font-weight:normal; font-size:13px;'>&nbsp;|&nbsp; %2</span>").arg(name, tags));
+            QString mainColor = mw->isDarkMode ? "#cdd6f4" : "#0f172a";
+            QString subColor = mw->isDarkMode ? "#a6adc8" : "#64748b";
+            detailsNameLabel->setText(QString("<span style='color:%1; font-weight:bold; font-size:16px;'>%2</span> <span style='color:%3; font-weight:normal; font-size:13px;'>&nbsp;|&nbsp; %4</span>").arg(mainColor, name, subColor, tags));
             detailsNotesText->setText(notes.isEmpty() ? "No notes added for this problem." : notes);
             detailsContainer->setVisible(true); });
 
-        // --- Restul UI-ului de grafice rămâne neschimbat ---
         QWidget *statsContainer = new QWidget(mw);
+        statsContainer->setObjectName("statsContainer");
+
         QVBoxLayout *statsLayout = new QVBoxLayout(statsContainer);
         statsLayout->setContentsMargins(12, 12, 12, 12);
         statsLayout->setSpacing(24);
@@ -407,9 +403,9 @@ struct MainWindowImpl
 
         pieSeries = new QPieSeries();
         pieSeries->setHoleSize(0.35);
-        pieSeries->append("Easy", 0)->setBrush(QColor(34, 197, 94));
-        pieSeries->append("Medium", 0)->setBrush(QColor(234, 179, 8));
-        pieSeries->append("Hard", 0)->setBrush(QColor(239, 68, 68));
+        pieSeries->append("Easy", 0);
+        pieSeries->append("Medium", 0);
+        pieSeries->append("Hard", 0);
 
         QChart *pieChart = new QChart();
         pieChart->addSeries(pieSeries);
@@ -418,12 +414,13 @@ struct MainWindowImpl
         pieChart->legend()->setAlignment(Qt::AlignBottom);
         pieChart->legend()->setFont(QFont("Arial", 8));
         pieChart->setMargins(QMargins(0, 0, 0, 0));
-        pieChart->setBackgroundRoundness(0);
+        pieChart->setBackgroundBrush(Qt::transparent);
 
         pieChartView = new QChartView(pieChart, statsContainer);
         pieChartView->setRenderHint(QPainter::Antialiasing);
         pieChartView->setMinimumHeight(240);
         pieChartView->setVisible(false);
+        pieChartView->setFrameShape(QFrame::NoFrame);
 
         heatmap = new HeatmapWidget(statsContainer);
 
@@ -433,6 +430,7 @@ struct MainWindowImpl
         statsLayout->addStretch();
 
         auto *splitter = new QSplitter(mw);
+
         auto *statsScroll = new QScrollArea(mw);
         statsScroll->setObjectName("statsScroll");
         statsScroll->setWidget(statsContainer);
@@ -467,12 +465,16 @@ struct MainWindowImpl
     }
 };
 
+// ---------------------------------------------------------
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       ui(std::make_unique<MainWindowImpl>()),
       cliProcess(new QProcess(this))
 {
     ui->setupUi(this);
+
+    updateThemeStyles();
 
     QString appDir = QCoreApplication::applicationDirPath();
     cliProcess->setWorkingDirectory(appDir);
@@ -513,6 +515,223 @@ MainWindow::~MainWindow()
         sendCommandToCli("EXIT");
         cliProcess->waitForFinished(2000);
     }
+}
+
+void MainWindow::toggleDarkMode()
+{
+    isDarkMode = !isDarkMode;
+    updateThemeStyles();
+    sendCommandToCli("STATS");
+
+    auto rows = ui->table->selectionModel()->selectedRows();
+    if (!rows.isEmpty())
+    {
+        emit ui->table->selectionModel()->selectionChanged(QItemSelection(), QItemSelection());
+    }
+}
+
+// === FIX FINAL: GLOBAL CSS CASCADE (Acoperă Dialoguri, Toolbar Hover și Tabel Alternate) ===
+void MainWindow::updateThemeStyles()
+{
+    if (isDarkMode)
+    {
+        QString darkCSS = R"(
+            QMainWindow, QWidget#statsContainer { background-color: #1e1e2e; }
+            QDialog { background-color: #1e1e2e; } 
+            QScrollArea#statsScroll { background-color: #1e1e2e; border: none; }
+            QWidget { color: #cdd6f4; font-family: "Segoe UI", Arial, sans-serif; }
+            
+            QFrame#metricCard, QFrame#tablePanel, QFrame#detailsContainer {
+                background-color: #181825; border: 1px solid #313244; border-radius: 8px;
+            }
+            QLabel#appTitle, QLabel#dialogTitle { font-size: 22px; font-weight: bold; color: #cdd6f4; }
+            QLabel#appSubtitle, QLabel#dialogSubtitle { color: #a6adc8; font-size: 13px; }
+            QLabel#metricLabel { color: #bac2de; font-size: 12px; font-weight: bold; }
+            QLabel#metricValue { font-size: 24px; font-weight: bold; color: #89b4fa; }
+            
+            QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QPlainTextEdit {
+                background-color: #11111b; color: #cdd6f4; border: 1px solid #313244; 
+                border-radius: 6px; padding: 6px 12px; selection-background-color: #89b4fa;
+            }
+            QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus, QDateEdit:focus, QPlainTextEdit:focus { 
+                border: 1px solid #89b4fa; 
+            }
+            QComboBox::drop-down { border: none; }
+            QComboBox QAbstractItemView {
+                background-color: #11111b; color: #cdd6f4; selection-background-color: #313244; border: 1px solid #313244;
+            }
+            
+            QPushButton {
+                background-color: #313244; color: #cdd6f4; border: 1px solid #45475a; 
+                border-radius: 6px; padding: 6px 14px; font-weight: bold;
+            }
+            QPushButton:hover { background-color: #45475a; }
+            QPushButton#primaryButton { background-color: #89b4fa; color: #11111b; border: none; }
+            QPushButton#primaryButton:hover { background-color: #b4befe; }
+            
+            QTableWidget {
+                background-color: #181825; alternate-background-color: #1e1e2e; color: #cdd6f4; border: none; 
+                selection-background-color: #313244; selection-color: #89b4fa; outline: none;
+            }
+            QTableWidget::viewport { background-color: transparent; border: none; }
+            QTableWidget::item { border-bottom: 1px solid #313244; padding: 4px; }
+            
+            QHeaderView, QHeaderView::section {
+                background-color: #11111b; color: #bac2de; border: none; 
+                font-weight: bold;
+            }
+            QHeaderView::section { border-bottom: 2px solid #313244; padding: 6px; }
+            QTableCornerButton::section { background-color: #11111b; border: none; }
+            
+            QMenuBar { background-color: #1e1e2e; color: #cdd6f4; }
+            QMenuBar::item:selected { background-color: #313244; }
+            QMenu { background-color: #181825; color: #cdd6f4; border: 1px solid #313244; }
+            QMenu::item:selected { background-color: #313244; }
+            
+            QToolBar { background-color: #1e1e2e; border-bottom: 1px solid #313244; spacing: 6px; }
+            QToolBar QToolButton { background: transparent; padding: 4px 8px; border-radius: 4px; color: #cdd6f4; }
+            QToolBar QToolButton:hover { background: #313244; }
+            QToolBar QToolButton:pressed { background: #45475a; }
+            
+            QStatusBar { background-color: #1e1e2e; color: #bac2de; }
+            
+            QTextEdit { background-color: transparent; color: #a6adc8; border: none; }
+            
+            QScrollBar:vertical { background: #1e1e2e; width: 10px; margin: 0px; }
+            QScrollBar::handle:vertical { background: #45475a; min-height: 20px; border-radius: 4px; }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
+            
+            QScrollBar:horizontal { background: #1e1e2e; height: 10px; margin: 0px; }
+            QScrollBar::handle:horizontal { background: #45475a; min-width: 20px; border-radius: 4px; }
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0px; }
+            QScrollBar::corner { background: transparent; }
+            
+            QChartView { background: transparent; border: none; }
+        )";
+
+        // Aplicăm tema GLOBAL pe întreaga instanță Qt (rezolvă bug-ul din AddProblemDialog instant)
+        qApp->setStyleSheet(darkCSS);
+
+        if (ui->pieChartView && ui->pieChartView->chart())
+        {
+            ui->pieChartView->chart()->setTheme(QChart::ChartThemeDark);
+            ui->pieChartView->chart()->setBackgroundBrush(Qt::transparent);
+            if (ui->pieSeries->slices().size() >= 3)
+            {
+                ui->pieSeries->slices().at(0)->setBrush(QColor(166, 227, 161));
+                ui->pieSeries->slices().at(1)->setBrush(QColor(249, 226, 175));
+                ui->pieSeries->slices().at(2)->setBrush(QColor(243, 139, 168));
+                for (auto *slice : ui->pieSeries->slices())
+                {
+                    slice->setBorderColor(QColor(30, 30, 46));
+                    slice->setBorderWidth(2);
+                }
+            }
+            ui->pieChartView->chart()->setTitleBrush(QColor(205, 214, 244));
+            ui->pieChartView->chart()->legend()->setLabelColor(QColor(186, 194, 222));
+        }
+        ui->themeAction->setText("Light Mode");
+    }
+    else
+    {
+        QString lightCSS = R"(
+            QMainWindow, QWidget#statsContainer { background-color: #f8fafc; }
+            QDialog { background-color: #ffffff; }
+            QScrollArea#statsScroll { background-color: #f8fafc; border: none; }
+            QWidget { color: #0f172a; font-family: "Segoe UI", Arial, sans-serif; }
+            
+            QFrame#metricCard, QFrame#tablePanel, QFrame#detailsContainer {
+                background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;
+            }
+            QLabel#appTitle, QLabel#dialogTitle { font-size: 22px; font-weight: bold; color: #0f172a; }
+            QLabel#appSubtitle, QLabel#dialogSubtitle { color: #64748b; font-size: 13px; }
+            QLabel#metricLabel { color: #64748b; font-size: 12px; font-weight: bold; }
+            QLabel#metricValue { font-size: 24px; font-weight: bold; color: #2563eb; }
+            
+            QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QPlainTextEdit {
+                background-color: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; 
+                border-radius: 6px; padding: 6px 12px; selection-background-color: #bfdbfe;
+            }
+            QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus, QDateEdit:focus, QPlainTextEdit:focus { 
+                border: 1px solid #3b82f6; 
+            }
+            QComboBox::drop-down { border: none; }
+            QComboBox QAbstractItemView {
+                background-color: #ffffff; color: #0f172a; selection-background-color: #eff6ff; border: 1px solid #cbd5e1;
+            }
+            
+            QPushButton {
+                background-color: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; 
+                border-radius: 6px; padding: 6px 14px; font-weight: bold;
+            }
+            QPushButton:hover { background-color: #f1f5f9; }
+            QPushButton#primaryButton { background-color: #2563eb; color: #ffffff; border: none; }
+            QPushButton#primaryButton:hover { background-color: #1d4ed8; }
+            
+            QTableWidget {
+                background-color: #ffffff; alternate-background-color: #f8fafc; color: #1e293b; border: none; 
+                selection-background-color: #eff6ff; selection-color: #1e40af; outline: none;
+            }
+            QTableWidget::viewport { background-color: transparent; border: none; }
+            QTableWidget::item { border-bottom: 1px solid #f1f5f9; padding: 4px; }
+            
+            QHeaderView, QHeaderView::section {
+                background-color: #f1f5f9; color: #475569; border: none; 
+                font-weight: bold;
+            }
+            QHeaderView::section { border-bottom: 2px solid #cbd5e1; padding: 6px; }
+            QTableCornerButton::section { background-color: #f1f5f9; border: none; }
+            
+            QMenuBar { background-color: #f8fafc; color: #0f172a; }
+            QMenuBar::item:selected { background-color: #e2e8f0; }
+            QMenu { background-color: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; }
+            QMenu::item:selected { background-color: #f1f5f9; }
+            
+            QToolBar { background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; spacing: 6px; }
+            QToolBar QToolButton { background: transparent; padding: 4px 8px; border-radius: 4px; color: #0f172a; }
+            QToolBar QToolButton:hover { background: #e2e8f0; }
+            QToolBar QToolButton:pressed { background: #cbd5e1; }
+            
+            QStatusBar { background-color: #f8fafc; color: #64748b; }
+            
+            QTextEdit { background-color: transparent; color: #475569; border: none; }
+            
+            QScrollBar:vertical { background: #f8fafc; width: 10px; margin: 0px; }
+            QScrollBar::handle:vertical { background: #cbd5e1; min-height: 20px; border-radius: 4px; }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
+            
+            QScrollBar:horizontal { background: #f8fafc; height: 10px; margin: 0px; }
+            QScrollBar::handle:horizontal { background: #cbd5e1; min-width: 20px; border-radius: 4px; }
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0px; }
+            QScrollBar::corner { background: transparent; }
+            
+            QChartView { background: transparent; border: none; }
+        )";
+
+        qApp->setStyleSheet(lightCSS);
+
+        if (ui->pieChartView && ui->pieChartView->chart())
+        {
+            ui->pieChartView->chart()->setTheme(QChart::ChartThemeLight);
+            ui->pieChartView->chart()->setBackgroundBrush(Qt::transparent);
+            if (ui->pieSeries->slices().size() >= 3)
+            {
+                ui->pieSeries->slices().at(0)->setBrush(QColor(34, 197, 94));
+                ui->pieSeries->slices().at(1)->setBrush(QColor(234, 179, 8));
+                ui->pieSeries->slices().at(2)->setBrush(QColor(239, 68, 68));
+                for (auto *slice : ui->pieSeries->slices())
+                {
+                    slice->setBorderColor(QColor(255, 255, 255));
+                    slice->setBorderWidth(2);
+                }
+            }
+            ui->pieChartView->chart()->setTitleBrush(QColor(15, 23, 42));
+            ui->pieChartView->chart()->legend()->setLabelColor(QColor(71, 85, 105));
+        }
+        ui->themeAction->setText("Dark Mode");
+    }
+
+    ui->heatmap->setDarkTheme(isDarkMode);
 }
 
 void MainWindow::sendCommandToCli(const QString &command)
@@ -580,7 +799,14 @@ void MainWindow::processMessage(const IPC::Message &msg)
                           [this](const IPC::StartStats &)
                           {
                               readingStats = true;
-                              statsHtmlBuffer = "<div style='font-size:18px; font-weight:800; color:#1e293b; margin-bottom:14px; border-bottom:2px solid #e2e8f0; padding-bottom:4px;'>Quick Details</div><div style='font-size:14px; color:#334155; line-height:1.6;'>";
+
+                              QString titleColor = isDarkMode ? "#cdd6f4" : "#0f172a";
+                              QString borderCol = isDarkMode ? "#313244" : "#e2e8f0";
+                              QString textCol = isDarkMode ? "#bac2de" : "#334155";
+
+                              statsHtmlBuffer = QString("<div style='font-size:18px; font-weight:800; color:%1; margin-bottom:14px; border-bottom:2px solid %2; padding-bottom:4px;'>Quick Details</div><div style='font-size:14px; color:%3; line-height:1.6;'>")
+                                                    .arg(titleColor, borderCol, textCol);
+
                               statEasy = statMedium = statHard = 0;
                               statDates.clear();
                           },
@@ -670,9 +896,15 @@ void MainWindow::processStatLine(const QString &line)
     else if (key == "total_time" && val.toInt() > 0)
         ui->timeValue->setText(val + "m");
     else if (key == "failed")
-        statsHtmlBuffer += QString("<div style='margin-bottom:6px;'><b>Failed:</b> <span style='color:#ef4444; font-weight:600;'>%1</span></div>").arg(val);
+    {
+        QString c = isDarkMode ? "#f38ba8" : "#ef4444";
+        statsHtmlBuffer += QString("<div style='margin-bottom:6px;'><b>Failed:</b> <span style='color:%1; font-weight:600;'>%2</span></div>").arg(c, val);
+    }
     else if (key == "progress")
-        statsHtmlBuffer += QString("<div style='margin-bottom:6px;'><b>In progress:</b> <span style='color:#f59e0b; font-weight:600;'>%1</span></div>").arg(val);
+    {
+        QString c = isDarkMode ? "#f9e2af" : "#f59e0b";
+        statsHtmlBuffer += QString("<div style='margin-bottom:6px;'><b>In progress:</b> <span style='color:%1; font-weight:600;'>%2</span></div>").arg(c, val);
+    }
     else if (key == "avg_time")
         statsHtmlBuffer += QString("<div style='margin-bottom:6px;'><b>Average time:</b> %1 min</div>").arg(val);
     else if (key == "diff_easy")
@@ -681,6 +913,17 @@ void MainWindow::processStatLine(const QString &line)
         statMedium = val.toInt();
     else if (key == "diff_hard")
         statHard = val.toInt();
+    else if (key == "most_used_tag")
+    {
+        if (isDarkMode)
+        {
+            statsHtmlBuffer += QString("<div style='margin-top:16px; border-top:1px dashed #313244; padding-top:8px;'><b style='color:#cdd6f4;'>Most used tag:</b></div><div style='display:inline-block; background:#313244; color:#89b4fa; padding:2px 8px; border-radius:4px; font-weight:600; margin-top:4px;'>%1</div>").arg(val);
+        }
+        else
+        {
+            statsHtmlBuffer += QString("<div style='margin-top:16px; border-top:1px dashed #e2e8f0; padding-top:8px;'><b style='color:#0f172a;'>Most used tag:</b></div><div style='display:inline-block; background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:600; margin-top:4px;'>%1</div>").arg(val);
+        }
+    }
     else if (key == "date_freq")
     {
         QStringList dparts = val.split('|');
