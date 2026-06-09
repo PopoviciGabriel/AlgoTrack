@@ -1,7 +1,7 @@
 ﻿#include "AddProblemDialog.h"
+#include "ui_AddProblemDialog.h"
 #include "Problem.h"
 #include "Enums.h"
-#include "ui_AddProblemDialog.h"
 
 #include <QComboBox>
 #include <QDateEdit>
@@ -13,11 +13,11 @@
 #include <QSpinBox>
 #include <QStringList>
 #include <QPushButton>
+#include <QVBoxLayout>
 #include <tuple>
 
 class AddProblemDialogImpl final : public AddProblemDialog
 {
-    Q_OBJECT
     friend class AddProblemDialog;
 
 public:
@@ -77,7 +77,15 @@ AddProblemDialog::unique_ptr AddProblemDialog::create(QWidget *parent)
     Ui::AddProblemDialog ui;
     ui.setupUi(impl);
 
-    // Am eliminat complet stilul hardcodat de aici. Dialogul va asculta perfect de tema globală.
+    // Style 2026 local pentru proprietățile geometrice ale elementelor din Dialog
+    impl->setStyleSheet(R"(
+        QPlainTextEdit#notesEdit {
+            min-height: 80px;
+            max-height: 100px;
+            max-width: 350px;
+            margin-bottom: 16px;
+        }
+    )");
 
     impl->nameEdit = impl->findChild<QLineEdit *>("nameEdit");
     impl->platformEdit = impl->findChild<QLineEdit *>("platformEdit");
@@ -124,5 +132,3 @@ Problem AddProblemDialog::problem() const
     const auto *impl = static_cast<const AddProblemDialogImpl *>(this);
     return std::make_from_tuple<Problem>(impl->gatherData());
 }
-
-#include "AddProblemDialog.moc"
