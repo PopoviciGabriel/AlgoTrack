@@ -131,7 +131,7 @@ protected:
 
                 int count = counts.value(d.toString("dd-MM-yyyy"), 0);
 
-                QColor color = isDark ? QColor(49, 50, 68) : QColor(235, 237, 240);
+                QColor color = isDark ? QColor(88, 91, 112) : QColor(235, 237, 240);
                 if (count == 1)
                     color = isDark ? QColor(14, 68, 41) : QColor(155, 233, 168);
                 else if (count == 2)
@@ -530,170 +530,20 @@ void MainWindow::toggleDarkMode()
 
 void MainWindow::updateThemeStyles()
 {
-    if (isDarkMode)
+    // Înlocuim sutele de linii de CSS inline cu citirea curată din resursele aplicației (.qrc)
+    QString qssResourcePath = isDarkMode ? ":/styles/dark.qss" : ":/styles/light.qss";
+    QFile file(qssResourcePath);
+    if (file.open(QFile::ReadOnly | QFile::Text))
     {
-        QString darkCSS = R"(
-            QMainWindow, QWidget#statsContainer { background-color: #1e1e2e; }
-            QScrollArea#statsScroll { background-color: #1e1e2e; border: none; }
-            QWidget { color: #cdd6f4; font-family: "Segoe UI", Arial, sans-serif; }
-            
-            /* --- STYLE MODERN 2026 PENTRU ADD PROBLEM DIALOG (DARK) --- */
-            QDialog { 
-                background-color: #11111b; 
-                border: 1.5px solid #313244; 
-                border-radius: 16px; 
-            }
-            QDialog QLabel {
-                color: #cdd6f4;
-                font-weight: 600;
-                font-size: 13px;
-            }
-            QDialog QLabel#dialogTitle {
-                font-size: 20px;
-                font-weight: 800;
-                color: #b4befe;
-            }
-            QDialog QLabel#dialogSubtitle {
-                font-size: 12px;
-                color: #a6adc8;
-            }
-            QDialog QLineEdit, QDialog QComboBox, QDialog QSpinBox, QDialog QDoubleSpinBox, QDialog QDateEdit, QDialog QPlainTextEdit {
-                background-color: #1e1e2e;
-                color: #cdd6f4;
-                border: 1.5px solid #313244;
-                border-radius: 10px;
-                padding: 8px 12px;
-                font-size: 13px;
-            }
-            QDialog QLineEdit:hover, QDialog QComboBox:hover, QDialog QSpinBox:hover, QDialog QDoubleSpinBox:hover, QDialog QDateEdit:hover, QDialog QPlainTextEdit:hover {
-                border-color: #45475a;
-                background-color: #252538;
-            }
-            QDialog QLineEdit:focus, QDialog QComboBox:focus, QDialog QSpinBox:focus, QDialog QDoubleSpinBox:focus, QDialog QDateEdit:focus, QDialog QPlainTextEdit:focus {
-                border-color: #b4befe;
-                background-color: #1e1e2e;
-            }
-            QDialog QPushButton {
-                background-color: #1e1e2e;
-                color: #a6adc8;
-                border: 1px solid #313244;
-                border-radius: 12px;
-                padding: 8px 18px;
-                font-weight: 700;
-                font-size: 13px;
-            }
-            QDialog QPushButton:hover {
-                background-color: #313244;
-                color: #cdd6f4;
-                border-color: #45475a;
-            }
-            QDialog QPushButton:default {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4befe, stop:1 #89b4fa);
-                color: #11111b;
-                border: none;
-            }
-            QDialog QPushButton:default:hover {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #cba6f7, stop:1 #b4befe);
-            }
+        QTextStream stream(&file);
+        qApp->setStyleSheet(stream.readAll());
+        file.close();
+    }
 
-            QFrame#metricCard, QFrame#tablePanel, QFrame#detailsContainer {
-                background-color: #181825; border: 1px solid #313244; border-radius: 10px;
-            }
-            QLabel#appTitle, QLabel#dialogTitle { font-size: 22px; font-weight: 800; color: #cdd6f4; }
-            QLabel#appSubtitle, QLabel#dialogSubtitle { color: #a6adc8; font-size: 13px; }
-            QLabel#metricLabel { color: #bac2de; font-size: 12px; font-weight: bold; }
-            QLabel#metricValue { font-size: 24px; font-weight: bold; color: #89b4fa; }
-            
-            /* Inputs de Bază (Main Window) */
-            QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QPlainTextEdit {
-                background-color: #181825; color: #cdd6f4; border: 1px solid #313244; 
-                border-radius: 8px; padding: 8px 12px; selection-background-color: #89b4fa;
-            }
-            QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus, QDateEdit:focus, QPlainTextEdit:focus { 
-                border: 1px solid #89b4fa; background-color: #1e1e2e;
-            }
-            
-            /* Notes cu lățime maximă redusă */
-            QPlainTextEdit#notesEdit {
-                max-height: 60px;
-                max-width: 350px;
-                margin-bottom: 18px;
-            }
-
-            QComboBox QAbstractItemView {
-                background-color: #11111b; color: #cdd6f4; selection-background-color: #313244; border: 1px solid #313244; border-radius: 8px;
-            }
-            
-            /* --- BUTOANE STYLE 2026 (Pill, Glow, Gradient) --- */
-            QPushButton {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #313244, stop:1 #181825);
-                color: #cdd6f4; border: 1px solid #45475a; 
-                border-radius: 14px; padding: 8px 18px; font-weight: 800; font-size: 13px;
-            }
-            QPushButton:hover { 
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #45475a, stop:1 #313244);
-                border: 1px solid #89b4fa;
-            }
-            QPushButton:pressed { background-color: #11111b; }
-            
-            QPushButton#primaryButton { 
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #89b4fa, stop:1 #a6e3a1);
-                color: #11111b; border: none; min-width: 80px;
-            }
-            QPushButton#primaryButton:hover { 
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4befe, stop:1 #94e2d5);
-            }
-            
-            /* Tabel */
-            QTableWidget {
-                background-color: #181825; alternate-background-color: #212135; color: #cdd6f4; border: none; 
-                selection-background-color: #313244; selection-color: #89b4fa; outline: none;
-            }
-            QTableWidget::viewport { background-color: transparent; border: none; }
-            QTableWidget::item { border-bottom: 1px solid #313244; padding: 4px; }
-            
-            QHeaderView, QHeaderView::section {
-                background-color: #11111b; color: #bac2de; border: none; font-weight: bold;
-            }
-            QHeaderView::section { border-bottom: 2px solid #313244; padding: 6px; }
-            QTableCornerButton::section { background-color: #11111b; border: none; }
-            
-            /* Meniuri */
-            QMenuBar { background-color: #1e1e2e; color: #cdd6f4; }
-            QMenuBar::item:selected { background-color: #313244; border-radius: 4px;}
-            QMenu { background-color: #181825; color: #cdd6f4; border: 1px solid #313244; border-radius: 6px;}
-            QMenu::item:selected { background-color: #313244; border-radius: 4px; }
-            
-            /* Toolbar Pill Buttons */
-            QToolBar { background-color: #1e1e2e; border-bottom: 1px solid #313244; spacing: 8px; padding: 4px; }
-            QToolBar QToolButton { 
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2b2d42, stop:1 #181825);
-                border: 1px solid #45475a; border-radius: 14px; padding: 4px 14px; color: #cdd6f4; font-weight: bold; 
-            }
-            QToolBar QToolButton:hover { 
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #313244, stop:1 #1e1e2e);
-                border: 1px solid #89b4fa; 
-            }
-            QToolBar QToolButton:pressed { background-color: #11111b; }
-            
-            QStatusBar { background-color: #1e1e2e; color: #bac2de; }
-            QTextEdit { background-color: transparent; color: #a6adc8; border: none; }
-            
-            /* Scrollbars */
-            QScrollBar:vertical { background: #1e1e2e; width: 12px; margin: 0px; }
-            QScrollBar::handle:vertical { background: #45475a; min-height: 20px; border-radius: 6px; }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
-            QScrollBar:horizontal { background: #1e1e2e; height: 12px; margin: 0px; }
-            QScrollBar::handle:horizontal { background: #45475a; min-width: 20px; border-radius: 6px; }
-            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0px; }
-            QScrollBar::corner { background: transparent; }
-            
-            QChartView { background: transparent; border: none; }
-        )";
-
-        qApp->setStyleSheet(darkCSS);
-
-        if (ui->pieChartView && ui->pieChartView->chart())
+    // Păstrăm exclusiv logica dinamică non-CSS pentru randarea elementelor QChart
+    if (ui->pieChartView && ui->pieChartView->chart())
+    {
+        if (isDarkMode)
         {
             ui->pieChartView->chart()->setTheme(QChart::ChartThemeDark);
             ui->pieChartView->chart()->setBackgroundBrush(Qt::transparent);
@@ -711,172 +561,7 @@ void MainWindow::updateThemeStyles()
             ui->pieChartView->chart()->setTitleBrush(QColor(205, 214, 244));
             ui->pieChartView->chart()->legend()->setLabelColor(QColor(186, 194, 222));
         }
-        ui->themeAction->setText("Light Mode");
-    }
-    else
-    {
-        QString lightCSS = R"(
-            QMainWindow, QWidget#statsContainer { background-color: #f8fafc; }
-            QScrollArea#statsScroll { background-color: #f8fafc; border: none; }
-            QWidget { color: #0f172a; font-family: "Segoe UI", Arial, sans-serif; }
-            
-            /* --- STYLE MODERN 2026 PENTRU ADD PROBLEM DIALOG (LIGHT) --- */
-            QDialog { 
-                background-color: #ffffff; 
-                border: 1.5px solid #cbd5e1; 
-                border-radius: 16px; 
-            }
-            QDialog QLabel {
-                color: #0f172a;
-                font-weight: 600;
-                font-size: 13px;
-            }
-            QDialog QLabel#dialogTitle {
-                font-size: 20px;
-                font-weight: 800;
-                color: #2563eb;
-            }
-            QDialog QLabel#dialogSubtitle {
-                font-size: 12px;
-                color: #64748b;
-            }
-            QDialog QLineEdit, QDialog QComboBox, QDialog QSpinBox, QDialog QDoubleSpinBox, QDialog QDateEdit, QDialog QPlainTextEdit {
-                background-color: #f8fafc;
-                color: #0f172a;
-                border: 1.5px solid #e2e8f0;
-                border-radius: 10px;
-                padding: 8px 12px;
-                font-size: 13px;
-            }
-            QDialog QLineEdit:hover, QDialog QComboBox:hover, QDialog QSpinBox:hover, QDialog QDoubleSpinBox:hover, QDialog QDateEdit:hover, QDialog QPlainTextEdit:hover {
-                border-color: #cbd5e1;
-                background-color: #f1f5f9;
-            }
-            QDialog QLineEdit:focus, QDialog QComboBox:focus, QDialog QSpinBox:focus, QDialog QDoubleSpinBox:focus, QDialog QDateEdit:focus, QDialog QPlainTextEdit:focus {
-                border-color: #3b82f6;
-                background-color: #ffffff;
-            }
-            QDialog QPushButton {
-                background-color: #f8fafc;
-                color: #475569;
-                border: 1px solid #cbd5e1;
-                border-radius: 12px;
-                padding: 8px 18px;
-                font-weight: 700;
-                font-size: 13px;
-            }
-            QDialog QPushButton:hover {
-                background-color: #f1f5f9;
-                color: #0f172a;
-                border-color: #94a3b8;
-            }
-            QDialog QPushButton:default {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2563eb, stop:1 #10b981);
-                color: #ffffff;
-                border: none;
-            }
-            QDialog QPushButton:default:hover {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #3b82f6, stop:1 #34d399);
-            }
-
-            QFrame#metricCard, QFrame#tablePanel, QFrame#detailsContainer {
-                background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px;
-            }
-            QLabel#appTitle, QLabel#dialogTitle { font-size: 22px; font-weight: 800; color: #0f172a; }
-            QLabel#appSubtitle, QLabel#dialogSubtitle { color: #64748b; font-size: 13px; }
-            QLabel#metricLabel { color: #64748b; font-size: 12px; font-weight: bold; }
-            QLabel#metricValue { font-size: 24px; font-weight: bold; color: #2563eb; }
-            
-            /* Inputs de Bază (Main Window) */
-            QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QPlainTextEdit {
-                background-color: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; 
-                border-radius: 8px; padding: 8px 12px; selection-background-color: #bfdbfe;
-            }
-            QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus, QDateEdit:focus, QPlainTextEdit:focus { 
-                border: 1px solid #3b82f6; background-color: #ffffff;
-            }
-
-            /* Notes cu lățime maximă redusă */
-            QPlainTextEdit#notesEdit {
-                max-height: 60px;
-                max-width: 350px;
-                margin-bottom: 18px;
-            }
-
-            QComboBox QAbstractItemView {
-                background-color: #ffffff; color: #0f172a; selection-background-color: #eff6ff; border: 1px solid #cbd5e1; border-radius: 8px;
-            }
-            
-            /* --- BUTOANE STYLE 2026 (Light Mode) --- */
-            QPushButton {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #ffffff, stop:1 #f8fafc);
-                color: #0f172a; border: 1px solid #cbd5e1; 
-                border-radius: 14px; padding: 8px 18px; font-weight: 800; font-size: 13px;
-            }
-            QPushButton:hover { 
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #f1f5f9, stop:1 #e2e8f0);
-                border: 1px solid #3b82f6; 
-            }
-            QPushButton:pressed { background-color: #cbd5e1; }
-            
-            QPushButton#primaryButton { 
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #3b82f6, stop:1 #10b981);
-                color: #ffffff; border: none; min-width: 80px;
-            }
-            QPushButton#primaryButton:hover { 
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #60a5fa, stop:1 #34d399);
-            }
-            
-            /* Tabel */
-            QTableWidget {
-                background-color: #ffffff; alternate-background-color: #f1f5f9; color: #1e293b; border: none; 
-                selection-background-color: #eff6ff; selection-color: #1e40af; outline: none;
-            }
-            QTableWidget::viewport { background-color: transparent; border: none; }
-            QTableWidget::item { border-bottom: 1px solid #f1f5f9; padding: 4px; }
-            
-            QHeaderView, QHeaderView::section {
-                background-color: #f1f5f9; color: #475569; border: none; font-weight: bold;
-            }
-            QHeaderView::section { border-bottom: 2px solid #cbd5e1; padding: 6px; }
-            QTableCornerButton::section { background-color: #f1f5f9; border: none; }
-            
-            /* Meniuri */
-            QMenuBar { background-color: #f8fafc; color: #0f172a; }
-            QMenuBar::item:selected { background-color: #e2e8f0; border-radius: 4px; }
-            QMenu { background-color: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 6px; }
-            QMenu::item:selected { background-color: #f1f5f9; border-radius: 4px; }
-            
-            /* Toolbar Pill Buttons */
-            QToolBar { background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; spacing: 8px; padding: 4px; }
-            QToolBar QToolButton { 
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #ffffff, stop:1 #f1f5f9);
-                border: 1px solid #cbd5e1; border-radius: 14px; padding: 4px 14px; color: #0f172a; font-weight: bold; 
-            }
-            QToolBar QToolButton:hover { 
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #f8fafc, stop:1 #e2e8f0);
-                border: 1px solid #3b82f6; 
-            }
-            QToolBar QToolButton:pressed { background-color: #cbd5e1; }
-            
-            QStatusBar { background-color: #f8fafc; color: #64748b; }
-            QTextEdit { background-color: transparent; color: #475569; border: none; }
-            
-            /* Scrollbars */
-            QScrollBar:vertical { background: #f8fafc; width: 12px; margin: 0px; }
-            QScrollBar::handle:vertical { background: #cbd5e1; min-height: 20px; border-radius: 6px; }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
-            QScrollBar:horizontal { background: #f8fafc; height: 12px; margin: 0px; }
-            QScrollBar::handle:horizontal { background: #cbd5e1; min-width: 20px; border-radius: 6px; }
-            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0px; }
-            QScrollBar::corner { background: transparent; }
-            
-            QChartView { background: transparent; border: none; }
-        )";
-
-        qApp->setStyleSheet(lightCSS);
-
-        if (ui->pieChartView && ui->pieChartView->chart())
+        else
         {
             ui->pieChartView->chart()->setTheme(QChart::ChartThemeLight);
             ui->pieChartView->chart()->setBackgroundBrush(Qt::transparent);
@@ -894,9 +579,9 @@ void MainWindow::updateThemeStyles()
             ui->pieChartView->chart()->setTitleBrush(QColor(15, 23, 42));
             ui->pieChartView->chart()->legend()->setLabelColor(QColor(71, 85, 105));
         }
-        ui->themeAction->setText("Dark Mode");
     }
 
+    ui->themeAction->setText(isDarkMode ? "Light Mode" : "Dark Mode");
     ui->heatmap->setDarkTheme(isDarkMode);
 }
 

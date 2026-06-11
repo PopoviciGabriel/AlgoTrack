@@ -1,0 +1,6 @@
+QPlainTextEdit#notesEdit {
+    min-height: 50px;
+    max-height: 60px;
+    max-width: 400px;
+    margin-bottom: 16px;
+}

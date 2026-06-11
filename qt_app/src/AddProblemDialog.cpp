@@ -14,28 +14,24 @@
 #include <QStringList>
 #include <QPushButton>
 #include <QVBoxLayout>
+#include <QStyledItemDelegate>
+#include <QFile>
 #include <tuple>
+#include <QAbstractItemView>
 
 class AddProblemDialogImpl final : public AddProblemDialog
 {
     friend class AddProblemDialog;
 
 public:
-    QLineEdit *nameEdit = nullptr;
-    QLineEdit *platformEdit = nullptr;
-    QComboBox *difficultyCombo = nullptr;
-    QLineEdit *tagsEdit = nullptr;
-    QComboBox *statusCombo = nullptr;
-    QSpinBox *timeSpin = nullptr;
-    QDateEdit *dateEdit = nullptr;
-    QDoubleSpinBox *ratingSpin = nullptr;
-    QPlainTextEdit *notesEdit = nullptr;
+    // Nativul generat de Qt înlocuiește toți pointerii manuali de dinainte
+    Ui::AddProblemDialog ui;
 
     explicit AddProblemDialogImpl(QWidget *parent) : AddProblemDialog(parent) {}
 
     auto gatherData() const
     {
-        QStringList rawTags = tagsEdit->text().split(',', Qt::SkipEmptyParts);
+        QStringList rawTags = ui.tagsEdit->text().split(',', Qt::SkipEmptyParts);
         std::vector<std::string> tags;
         tags.reserve(rawTags.size());
         for (const QString &tag : rawTags)
@@ -43,22 +39,36 @@ public:
             tags.push_back(tag.trimmed().toStdString());
         }
 
-        Difficulty diff = (difficultyCombo->currentIndex() == 0) ? Difficulty::Easy : (difficultyCombo->currentIndex() == 1) ? Difficulty::Medium
-                                                                                                                             : Difficulty::Hard;
+        Difficulty diff = (ui.difficultyCombo->currentIndex() == 0) ? Difficulty::Easy : (ui.difficultyCombo->currentIndex() == 1) ? Difficulty::Medium
+                                                                                                                                   : Difficulty::Hard;
 
-        Status stat = (statusCombo->currentIndex() == 0) ? Status::Solved : (statusCombo->currentIndex() == 1) ? Status::Failed
-                                                                                                               : Status::InProgress;
+        Status stat = (ui.statusCombo->currentIndex() == 0) ? Status::Solved : (ui.statusCombo->currentIndex() == 1) ? Status::Failed
+                                                                                                                     : Status::InProgress;
 
         return std::make_tuple(
-            nameEdit->text().toStdString(),
-            platformEdit->text().toStdString(),
+            ui.nameEdit->text().toStdString(),
+            ui.platformEdit->text().toStdString(),
             diff,
             tags,
             stat,
-            timeSpin->value(),
-            dateEdit->date().toString("dd-MM-yyyy").toStdString(),
-            ratingSpin->value(),
-            notesEdit->toPlainText().toStdString());
+            ui.timeSpin->value(),
+            ui.dateEdit->date().toString("dd-MM-yyyy").toStdString(),
+            ui.ratingSpin->value(),
+            ui.notesEdit->toPlainText().toStdString());
+    }
+
+    // Validare reactivă în timp real a inputului din UI
+    void validateInputFields()
+    {
+        auto *buttons = findChild<QDialogButtonBox *>("dialogButtons");
+        if (buttons)
+        {
+            bool hasName = !ui.nameEdit->text().trimmed().isEmpty();
+            bool hasPlatform = !ui.platformEdit->text().trimmed().isEmpty();
+            bool hasTags = !ui.tagsEdit->text().trimmed().isEmpty();
+
+            buttons->button(QDialogButtonBox::Ok)->setEnabled(hasName && hasPlatform && hasTags);
+        }
     }
 };
 
@@ -74,33 +84,44 @@ AddProblemDialog::unique_ptr AddProblemDialog::create(QWidget *parent)
     auto *impl = new AddProblemDialogImpl(parent);
     auto dlg = unique_ptr{impl};
 
-    Ui::AddProblemDialog ui;
-    ui.setupUi(impl);
+    // Inițializare directă pe instanța UI deținută de Impl
+    impl->ui.setupUi(impl);
 
-    // Style 2026 local pentru proprietățile geometrice ale elementelor din Dialog
-    impl->setStyleSheet(R"(
-        QPlainTextEdit#notesEdit {
-            min-height: 80px;
-            max-height: 100px;
-            max-width: 350px;
-            margin-bottom: 16px;
-        }
-    )");
+    impl->ui.timeSpin->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
+    impl->ui.ratingSpin->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
 
-    impl->nameEdit = impl->findChild<QLineEdit *>("nameEdit");
-    impl->platformEdit = impl->findChild<QLineEdit *>("platformEdit");
-    impl->difficultyCombo = impl->findChild<QComboBox *>("difficultyCombo");
-    impl->tagsEdit = impl->findChild<QLineEdit *>("tagsEdit");
-    impl->statusCombo = impl->findChild<QComboBox *>("statusCombo");
-    impl->timeSpin = impl->findChild<QSpinBox *>("timeSpin");
-    impl->dateEdit = impl->findChild<QDateEdit *>("dateEdit");
-    impl->ratingSpin = impl->findChild<QDoubleSpinBox *>("ratingSpin");
-    impl->notesEdit = impl->findChild<QPlainTextEdit *>("notesEdit");
-
-    if (!impl->nameEdit || !impl->platformEdit || !impl->difficultyCombo || !impl->tagsEdit ||
-        !impl->statusCombo || !impl->timeSpin || !impl->dateEdit || !impl->ratingSpin || !impl->notesEdit)
+    // Încărcare CSS curată din sistemul de resurse (.qrc)
+    QFile styleFile(":/styles/dialog.qss");
+    if (styleFile.open(QFile::ReadOnly | QFile::Text))
     {
-        throw std::runtime_error("UI decomposition error: some fields are missing.");
+        impl->setStyleSheet(QLatin1String(styleFile.readAll()));
+    }
+
+    // Delegat pentru stilizare fără hack-uri de transparență
+    impl->ui.difficultyCombo->setItemDelegate(new QStyledItemDelegate(impl->ui.difficultyCombo));
+    impl->ui.statusCombo->setItemDelegate(new QStyledItemDelegate(impl->ui.statusCombo));
+
+    // --- FIX DEFINITIV PENTRU FUNDALUL LISTEI DROP-DOWN ---
+    auto fixComboPopup = [](QComboBox *cb)
+    {
+        QWidget *popup = cb->view()->window();
+
+        popup->setWindowFlags(
+            Qt::Popup |
+            Qt::FramelessWindowHint |
+            Qt::NoDropShadowWindowHint);
+
+        popup->setStyleSheet(
+            "border-radius: 8px;");
+    };
+
+    fixComboPopup(impl->ui.difficultyCombo);
+    fixComboPopup(impl->ui.statusCombo);
+    // -------------------------------------------------------
+
+    if (impl->ui.dateEdit)
+    {
+        impl->ui.dateEdit->setDate(QDate::currentDate());
     }
 
     auto *buttons = impl->findChild<QDialogButtonBox *>("dialogButtons");
@@ -119,10 +140,11 @@ AddProblemDialog::unique_ptr AddProblemDialog::create(QWidget *parent)
         QObject::connect(buttons, &QDialogButtonBox::rejected, impl, &QDialog::reject);
     }
 
-    if (impl->dateEdit)
-    {
-        impl->dateEdit->setDate(QDate::currentDate());
-    }
+    // Înregistrare semnale pentru verificarea în timp real a validității
+    impl->validateInputFields();
+    QObject::connect(impl->ui.nameEdit, &QLineEdit::textChanged, impl, &AddProblemDialogImpl::validateInputFields);
+    QObject::connect(impl->ui.platformEdit, &QLineEdit::textChanged, impl, &AddProblemDialogImpl::validateInputFields);
+    QObject::connect(impl->ui.tagsEdit, &QLineEdit::textChanged, impl, &AddProblemDialogImpl::validateInputFields);
 
     return dlg;
 }

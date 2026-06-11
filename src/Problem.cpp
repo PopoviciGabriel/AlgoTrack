@@ -5,93 +5,136 @@
 #include <string>
 #include <stdexcept>
 
-namespace
+// =========================================================
+// IMPLEMENTARE TIPURI PUTERNICE (STRONG TYPES INVARIANTS)
+// =========================================================
+
+std::string ProblemName::validate(const std::string &name)
 {
-    // Funcții pure de validare ascunse în acest fișier de translație.
-    // Ele primesc valorile brute și returnează valoarea curățată sau aruncă eroare.
-    std::string validateName(std::string name)
-    {
-        std::string cleaned = trim(name);
-        if (isBlank(cleaned))
-            throw std::invalid_argument("Name cannot be empty.");
-        return cleaned;
-    }
-
-    std::string validatePlatform(std::string platform)
-    {
-        std::string cleaned = toLowerCase(trim(platform));
-        if (isBlank(cleaned))
-            throw std::invalid_argument("Platform cannot be empty.");
-        return cleaned;
-    }
-
-    std::vector<std::string> validateTags(const std::vector<std::string> &tags)
-    {
-        if (tags.empty())
-            throw std::invalid_argument("At least one tag is required.");
-        std::vector<std::string> cleanedTags;
-        for (const auto &tag : tags)
-        {
-            std::string cleaned = toLowerCase(trim(tag));
-            if (isBlank(cleaned))
-                throw std::invalid_argument("Tag cannot be empty.");
-            if (cleaned.find('|') != std::string::npos)
-                throw std::invalid_argument("Tag cannot contain '|'.");
-            cleanedTags.push_back(cleaned);
-        }
-        return cleanedTags;
-    }
-
-    int validateTimeSpent(int timeSpent)
-    {
-        if (timeSpent < 0)
-            throw std::invalid_argument("Time spent cannot be negative.");
-        return timeSpent;
-    }
-
-    std::string validateDate(std::string date)
-    {
-        if (isBlank(date))
-            throw std::invalid_argument("Date cannot be empty.");
-        if (!isValidDateFormat(date))
-            throw std::invalid_argument("Date must be in format DD-MM-YYYY.");
-        return date;
-    }
-
-    double validateRating(double rating)
-    {
-        if (rating < 1.0 || rating > 10.0)
-            throw std::invalid_argument("Rating must be between 1.0 and 10.0.");
-        return rating;
-    }
+    std::string cleaned = trim(name);
+    if (isBlank(cleaned))
+        throw std::invalid_argument("Name cannot be empty.");
+    return cleaned;
 }
+ProblemName::ProblemName() : m_value("") {}
+ProblemName::ProblemName(const std::string &name) : m_value(validate(name)) {}
+const std::string &ProblemName::asString() const { return m_value; }
+
+std::string Platform::validate(const std::string &platform)
+{
+    std::string cleaned = toLowerCase(trim(platform));
+    if (isBlank(cleaned))
+        throw std::invalid_argument("Platform cannot be empty.");
+    return cleaned;
+}
+Platform::Platform() : m_value("") {}
+Platform::Platform(const std::string &platform) : m_value(validate(platform)) {}
+const std::string &Platform::asString() const { return m_value; }
+
+std::string Tag::validate(const std::string &tag)
+{
+    std::string cleaned = toLowerCase(trim(tag));
+    if (isBlank(cleaned))
+        throw std::invalid_argument("Tag cannot be empty.");
+    if (cleaned.find('|') != std::string::npos)
+        throw std::invalid_argument("Tag cannot contain '|'.");
+    return cleaned;
+}
+Tag::Tag() : m_value("") {}
+Tag::Tag(const std::string &tag) : m_value(validate(tag)) {}
+const std::string &Tag::asString() const { return m_value; }
+
+int TimeSpent::validate(int timeSpent)
+{
+    if (timeSpent < 0)
+        throw std::invalid_argument("Time spent cannot be negative.");
+    return timeSpent;
+}
+TimeSpent::TimeSpent() : m_value(0) {}
+TimeSpent::TimeSpent(int timeSpent) : m_value(validate(timeSpent)) {}
+int TimeSpent::asInt() const { return m_value; }
+
+std::string ProblemDate::validate(const std::string &date)
+{
+    if (isBlank(date))
+        throw std::invalid_argument("Date cannot be empty.");
+    if (!isValidDateFormat(date))
+        throw std::invalid_argument("Date must be in format DD-MM-YYYY.");
+    return date;
+}
+ProblemDate::ProblemDate() : m_value("") {}
+ProblemDate::ProblemDate(const std::string &date) : m_value(validate(date)) {}
+const std::string &ProblemDate::asString() const { return m_value; }
+
+double ProblemRating::validate(double rating)
+{
+    if (rating < 1.0 || rating > 10.0)
+        throw std::invalid_argument("Rating must be between 1.0 and 10.0.");
+    return rating;
+}
+ProblemRating::ProblemRating() : m_value(1.0) {}
+ProblemRating::ProblemRating(double rating) : m_value(validate(rating)) {}
+double ProblemRating::asDouble() const { return m_value; }
+
+// =========================================================
+// IMPLEMENTARE CLASĂ DOMENIU (PROBLEM)
+// =========================================================
 
 Problem::Problem()
-    : name(""),
-      platform(""),
+    : name(),
+      platform(),
       difficulty(Difficulty::Easy),
       status(Status::InProgress),
-      timeSpent(0),
-      date(""),
-      rating(1.0),
+      timeSpent(),
+      date(),
+      rating(),
       notes("")
 {
 }
 
-// Constructorul perfect RAII: Când ajungem la {}, obiectul este 100% valid.
 Problem::Problem(std::string name, std::string platform, Difficulty difficulty,
                  std::vector<std::string> tags, Status status,
                  int timeSpent, std::string date, double rating, std::string notes)
-    : name(validateName(name)),
-      platform(validatePlatform(platform)),
+    : name(name),
+      platform(platform),
       difficulty(difficulty),
-      tags(validateTags(tags)),
       status(status),
-      timeSpent(validateTimeSpent(timeSpent)),
-      date(validateDate(date)),
-      rating(validateRating(rating)),
+      timeSpent(timeSpent),
+      date(date),
+      rating(rating),
       notes(notes)
 {
+    if (tags.empty())
+        throw std::invalid_argument("At least one tag is required.");
+
+    for (const auto &rawTag : tags)
+    {
+        this->tags.push_back(Tag(rawTag));
+    }
+    m_cachedTags = std::move(tags);
+}
+
+Problem::Problem(ProblemName name, Platform platform, Difficulty difficulty,
+                 std::vector<Tag> tags, Status status,
+                 TimeSpent timeSpent, ProblemDate date, ProblemRating rating, std::string notes)
+    : name(std::move(name)),
+      platform(std::move(platform)),
+      difficulty(difficulty),
+      tags(std::move(tags)),
+      status(status),
+      timeSpent(timeSpent),
+      date(std::move(date)),
+      rating(rating),
+      notes(std::move(notes))
+{
+    if (this->tags.empty())
+        throw std::invalid_argument("At least one tag is required.");
+
+    m_cachedTags.clear();
+    for (const auto &t : this->tags)
+    {
+        m_cachedTags.push_back(t.asString());
+    }
 }
 
 void Problem::changeStatus(const Status &newStatus)
@@ -104,34 +147,34 @@ void Problem::changeNotes(const std::string &newNotes)
     notes = newNotes;
 }
 
-const std::string &Problem::getName() const { return name; }
-const std::string &Problem::getPlatform() const { return platform; }
+const std::string &Problem::getName() const { return name.asString(); }
+const std::string &Problem::getPlatform() const { return platform.asString(); }
 Difficulty Problem::getDifficulty() const { return difficulty; }
-const std::vector<std::string> &Problem::getTags() const { return tags; }
+const std::vector<std::string> &Problem::getTags() const { return m_cachedTags; }
 Status Problem::getStatus() const { return status; }
-int Problem::getTimeSpent() const { return timeSpent; }
-const std::string &Problem::getDate() const { return date; }
-double Problem::getRating() const { return rating; }
+int Problem::getTimeSpent() const { return timeSpent.asInt(); }
+const std::string &Problem::getDate() const { return date.asString(); }
+double Problem::getRating() const { return rating.asDouble(); }
 const std::string &Problem::getNotes() const { return notes; }
 
 std::string Problem::toCSV() const
 {
     std::string tagsString;
-    for (int i = 0; i < (int)tags.size(); i++)
+    for (size_t i = 0; i < tags.size(); i++)
     {
-        tagsString += tags[i];
-        if (i + 1 < (int)tags.size())
+        tagsString += tags[i].asString();
+        if (i + 1 < tags.size())
             tagsString += "|";
     }
 
-    return escapeCSVField(name) + "," +
-           escapeCSVField(platform) + "," +
+    return escapeCSVField(name.asString()) + "," +
+           escapeCSVField(platform.asString()) + "," +
            escapeCSVField(difficultyToCSV(difficulty)) + "," +
            escapeCSVField(tagsString) + "," +
            escapeCSVField(statusToCSV(status)) + "," +
-           escapeCSVField(std::to_string(timeSpent)) + "," +
-           escapeCSVField(date) + "," +
-           escapeCSVField(std::to_string(rating)) + "," +
+           escapeCSVField(std::to_string(timeSpent.asInt())) + "," +
+           escapeCSVField(date.asString()) + "," +
+           escapeCSVField(std::to_string(rating.asDouble())) + "," +
            escapeCSVField(notes);
 }
 
@@ -141,9 +184,8 @@ void Problem::fromCSV(const std::string &line)
     if (fields.size() != 9)
         throw std::runtime_error("Invalid CSV line.");
 
-    // Extragem, validăm și suprascriem invarianții
-    std::string parsedName = validateName(fields[0]);
-    std::string parsedPlatform = validatePlatform(fields[1]);
+    ProblemName parsedName(fields[0]);
+    Platform parsedPlatform(fields[1]);
     Difficulty parsedDifficulty = parseDifficulty(fields[2]);
     Status parsedStatus = parseStatus(fields[4]);
 
@@ -152,32 +194,62 @@ void Problem::fromCSV(const std::string &line)
     std::string temp;
     while (std::getline(ts, temp, '|'))
         rawTags.push_back(temp);
-    std::vector<std::string> parsedTags = validateTags(rawTags);
 
-    int parsedTimeSpent;
-    double parsedRating;
+    if (rawTags.empty())
+        throw std::invalid_argument("At least one tag is required.");
+
+    std::vector<Tag> parsedTags;
+    std::vector<std::string> cachedStrings;
+    for (const auto &rt : rawTags)
+    {
+        Tag t(rt);
+        parsedTags.push_back(t);
+        cachedStrings.push_back(t.asString());
+    }
+
+    int rawTimeSpent;
+    double rawRating;
     try
     {
-        parsedTimeSpent = std::stoi(fields[5]);
-        parsedRating = std::stod(fields[7]);
+        rawTimeSpent = std::stoi(fields[5]);
+        rawRating = std::stod(fields[7]);
     }
     catch (...)
     {
         throw std::runtime_error("Invalid numeric value in CSV.");
     }
 
-    parsedTimeSpent = validateTimeSpent(parsedTimeSpent);
-    parsedRating = validateRating(parsedRating);
-    std::string parsedDate = validateDate(fields[6]);
+    TimeSpent parsedTimeSpent(rawTimeSpent);
+    ProblemRating parsedRating(rawRating);
+    ProblemDate parsedDate(fields[6]);
 
-    // Odată ce totul e valid, asamblăm memoria
-    name = parsedName;
-    platform = parsedPlatform;
+    name = std::move(parsedName);
+    platform = std::move(parsedPlatform);
     difficulty = parsedDifficulty;
-    tags = parsedTags;
+    tags = std::move(parsedTags);
+    m_cachedTags = std::move(cachedStrings);
     status = parsedStatus;
     timeSpent = parsedTimeSpent;
-    date = parsedDate;
+    date = std::move(parsedDate);
     rating = parsedRating;
     notes = fields[8];
 }
+
+void Problem::setName(const std::string &newName) { name = ProblemName(newName); }
+void Problem::setPlatform(const std::string &newPlatform) { platform = Platform(newPlatform); }
+void Problem::setDifficulty(Difficulty newDifficulty) { difficulty = newDifficulty; }
+void Problem::setTags(const std::vector<std::string> &newTags)
+{
+    if (newTags.empty())
+        throw std::invalid_argument("At least one tag is required.");
+    std::vector<Tag> tempTags;
+    for (const auto &nt : newTags)
+        tempTags.push_back(Tag(nt));
+    tags = std::move(tempTags);
+    m_cachedTags = newTags;
+}
+void Problem::setStatus(Status newStatus) { status = newStatus; }
+void Problem::setTimeSpent(int newTimeSpent) { timeSpent = TimeSpent(newTimeSpent); }
+void Problem::setDate(const std::string &newDate) { date = ProblemDate(newDate); }
+void Problem::setRating(double newRating) { rating = ProblemRating(newRating); }
+void Problem::setNotes(const std::string &newNotes) { notes = newNotes; }
