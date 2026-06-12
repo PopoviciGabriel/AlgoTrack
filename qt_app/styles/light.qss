@@ -37,7 +37,8 @@ QDialog QLabel#dialogSubtitle {
     color: #64748b;
 }
 
-QDialog QLineEdit, QDialog QComboBox, QDialog QSpinBox, QDialog QDoubleSpinBox, QDialog QDateEdit, QDialog QPlainTextEdit {
+/* Am eliminat SpinBox-urile și DateEdit de aici pentru a menține look-ul nativ Fusion */
+QDialog QLineEdit, QDialog QComboBox, QDialog QPlainTextEdit {
     background-color: #f8fafc;
     color: #0f172a;
     border: 1.5px solid #e2e8f0;
@@ -46,12 +47,12 @@ QDialog QLineEdit, QDialog QComboBox, QDialog QSpinBox, QDialog QDoubleSpinBox, 
     font-size: 13px;
 }
 
-QDialog QLineEdit:hover, QDialog QComboBox:hover, QDialog QSpinBox:hover, QDialog QDoubleSpinBox:hover, QDialog QDateEdit:hover, QDialog QPlainTextEdit:hover {
+QDialog QLineEdit:hover, QDialog QComboBox:hover, QDialog QPlainTextEdit:hover {
     border-color: #cbd5e1;
     background-color: #f1f5f9;
 }
 
-QDialog QLineEdit:focus, QDialog QComboBox:focus, QDialog QSpinBox:focus, QDialog QDoubleSpinBox:focus, QDialog QDateEdit:focus, QDialog QPlainTextEdit:focus {
+QDialog QLineEdit:focus, QDialog QComboBox:focus, QDialog QPlainTextEdit:focus {
     border-color: #3b82f6;
     background-color: #ffffff;
 }
@@ -82,69 +83,11 @@ QDialog QPushButton:default:hover {
     background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #60a5fa, stop:1 #34d399);
 }
 
-/* --- Butoane moderne pentru SpinBox / DoubleSpinBox / DateEdit --- */
-
-QDialog QSpinBox,
-QDialog QDoubleSpinBox,
-QDialog QDateEdit {
-    padding-right: 34px;   /* spațiu pentru butoane */
-}
-
-/* ===== SpinBox / DoubleSpinBox arrows ===== */
-
-QAbstractSpinBox {
-    padding-right: 34px;
-}
-
-QAbstractSpinBox::up-button {
-    subcontrol-origin: border;
-    subcontrol-position: top right;
-
-    width: 28px;
-
-    border-left: 1px solid #cbd5e1;
-    border-top-right-radius: 8px;
-
-    background-color: #f8fafc;
-}
-
-QAbstractSpinBox::down-button {
-    subcontrol-origin: border;
-    subcontrol-position: bottom right;
-
-    width: 28px;
-
-    border-left: 1px solid #cbd5e1;
-    border-bottom-right-radius: 8px;
-
-    background-color: #f8fafc;
-}
-
-QAbstractSpinBox::up-button:hover,
-QAbstractSpinBox::down-button:hover {
-    background-color: #dbeafe;
-}
-
-QAbstractSpinBox::up-button:pressed,
-QAbstractSpinBox::down-button:pressed {
-    background-color: #bfdbfe;
-}
-
-QSpinBox::up-arrow,
-QDoubleSpinBox::up-arrow,
-QDateEdit::up-arrow,
-QSpinBox::down-arrow,
-QDoubleSpinBox::down-arrow,
-QDateEdit::down-arrow {
-    width: 10px;
-    height: 10px;
-}
-
 /* --- CARDURI ȘI CHENARE FEREASTRĂ PRINCIPALĂ --- */
 QFrame#metricCard, QFrame#tablePanel, QFrame#detailsContainer {
     background-color: #ffffff; 
     border: 1px solid #e2e8f0; 
-    border-radius: 10px; /* Identic cu cei 10px din Dark Mode */
+    border-radius: 10px; 
 }
 
 QLabel#appTitle, QLabel#dialogTitle { 
@@ -171,6 +114,7 @@ QLabel#metricValue {
 }
             
 /* Inputs de Bază (Main Window) */
+/* Am eliminat SpinBox-urile și DateEdit de aici de asemenea */
 QLineEdit, QComboBox, QPlainTextEdit {
     background-color: #ffffff;
     color: #0f172a;
@@ -180,7 +124,7 @@ QLineEdit, QComboBox, QPlainTextEdit {
     selection-background-color: #bfdbfe;
 }
 
-QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus, QDateEdit:focus, QPlainTextEdit:focus { 
+QLineEdit:focus, QComboBox:focus, QPlainTextEdit:focus { 
     border: 1px solid #3b82f6; 
     background-color: #ffffff;
 }
@@ -196,10 +140,10 @@ QPlainTextEdit#notesEdit {
 QComboBox QAbstractItemView {
     background-color: #ffffff;
     color: #1e293b;
-    border: 1px solid #cbd5e1; /* Chenar fin, asortat cu tema luminoasă */
+    border: 1px solid #cbd5e1; 
     border-radius: 8px;
-    outline: none; /* Elimină focus ring-ul default (punctele acelea urâte) */
-    padding: 4px; /* Spațiu de respiro în jurul itemilor */
+    outline: none; 
+    padding: 4px; 
 }
 
 /* Stilizarea fiecărui rând din listă */
@@ -211,7 +155,7 @@ QComboBox QAbstractItemView::item {
 
 QComboBox QAbstractItemView::item:hover,
 QComboBox QAbstractItemView::item:selected {
-    background-color: #f1f5f9; /* Un gri/albastru foarte deschis */
+    background-color: #f1f5f9; 
     color: #2563eb;
 }
 
@@ -396,3 +340,77 @@ QChartView {
     background: transparent; 
     border: none; 
 }
+
+/* --- SPINBOX & DATEEDIT (LIGHT) --- */
+QDialog QSpinBox,
+QDialog QDoubleSpinBox,
+QDialog QDateEdit {
+    background-color: #f8fafc;
+    color: #0f172a;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    min-width: 0px;
+}
+
+QDialog QSpinBox:hover,
+QDialog QDoubleSpinBox:hover,
+QDialog QDateEdit:hover {
+    border-color: #cbd5e1;
+    background-color: #f1f5f9;
+}
+
+QDialog QSpinBox:focus,
+QDialog QDoubleSpinBox:focus,
+QDialog QDateEdit:focus {
+    border-color: #3b82f6;
+    background-color: #ffffff;
+}
+
+/* Butonul sus (↑) pentru SpinBox */
+QDialog QSpinBox::up-button,
+QDialog QDoubleSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+    width: 20px;
+    border-left: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    border-top-right-radius: 9px;
+    background-color: #f1f5f9;
+}
+
+QDialog QSpinBox::up-button:hover,
+QDialog QDoubleSpinBox::up-button:hover { background-color: #e2e8f0; }
+QDialog QSpinBox::up-button:pressed,
+QDialog QDoubleSpinBox::up-button:pressed { background-color: #cbd5e1; }
+
+/* Butonul jos (↓) pentru SpinBox */
+QDialog QSpinBox::down-button,
+QDialog QDoubleSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+    width: 20px;
+    border-left: 1px solid #e2e8f0;
+    border-top: 1px solid #e2e8f0;
+    border-bottom-right-radius: 9px;
+    background-color: #f1f5f9;
+}
+
+QDialog QSpinBox::down-button:hover,
+QDialog QDoubleSpinBox::down-button:hover { background-color: #e2e8f0; }
+QDialog QSpinBox::down-button:pressed,
+QDialog QDoubleSpinBox::down-button:pressed { background-color: #cbd5e1; }
+
+/* Butonul drop-down pentru QDateEdit */
+QDialog QDateEdit::drop-down {
+    subcontrol-origin: border;
+    subcontrol-position: center right;
+    width: 28px;
+    border-left: 1px solid #e2e8f0;
+    border-top-right-radius: 9px;
+    border-bottom-right-radius: 9px;
+    background-color: #f1f5f9;
+}
+
+QDialog QDateEdit::drop-down:hover { background-color: #e2e8f0; }

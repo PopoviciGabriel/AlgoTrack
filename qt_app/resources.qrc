@@ -3,5 +3,7 @@
     <file>styles/dark.qss</file>
     <file>styles/light.qss</file>
     <file>styles/dialog.qss</file>
+    <file>styles/icons/arrow_up.svg</file>
+    <file>styles/icons/arrow_down.svg</file>
 </qresource>
 </RCC>

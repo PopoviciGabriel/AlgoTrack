@@ -4,3 +4,24 @@ QPlainTextEdit#notesEdit {
     max-width: 400px;
     margin-bottom: 16px;
 }
+
+/* Săgețile SpinBox (SVG-urile sunt aceleași și pe light și pe dark) */
+QDialog QSpinBox::up-arrow,
+QDialog QDoubleSpinBox::up-arrow {
+    image: url(:/styles/icons/arrow_up.svg);
+    width: 8px;
+    height: 8px;
+}
+
+QDialog QSpinBox::down-arrow,
+QDialog QDoubleSpinBox::down-arrow {
+    image: url(:/styles/icons/arrow_down.svg);
+    width: 8px;
+    height: 8px;
+}
+
+QDialog QDateEdit::down-arrow {
+    image: url(:/styles/icons/arrow_down.svg);
+    width: 8px;
+    height: 8px;
+}

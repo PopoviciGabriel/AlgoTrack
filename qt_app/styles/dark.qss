@@ -71,44 +71,98 @@ QDialog QPushButton:hover {
     border-color: #45475a;
 }
 
+/* --- Butonul Default (Add) din Dialog --- */
 QDialog QPushButton:default {
-    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4befe, stop:1 #89b4fa);
-    color: #11111b;
+    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #3b82f6, stop:1 #10b981);
+    color: #ffffff;
     border: none;
 }
 
 QDialog QPushButton:default:hover {
-    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #cba6f7, stop:1 #b4befe);
+    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #60a5fa, stop:1 #34d399);
 }
 
-/* 2026 Style for Increment/Decrement buttons in Spinboxes - Dark Mode */
-QDialog QSpinBox::up-button, QDialog QDoubleSpinBox::up-button, QDialog QDateEdit::up-button {
-    width: 24px;
-    border: none;
+/* Butonul sus (↑) pentru SpinBox */
+QDialog QSpinBox::up-button,
+QDialog QDoubleSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+    width: 20px;
     border-left: 1px solid #313244;
-    border-top-right-radius: 10px;
+    border-bottom: 1px solid #313244;
+    border-top-right-radius: 9px;
+    background-color: #252538;
 }
 
-QDialog QSpinBox::down-button, QDialog QDoubleSpinBox::down-button, QDialog QDateEdit::down-button {
-    width: 24px;
-    border: none;
-    border-left: 1px solid #313244;
-    border-bottom-right-radius: 10px;
-}
-
-QDialog QSpinBox::up-button:hover, QDialog QDoubleSpinBox::up-button:hover, QDialog QDateEdit::up-button:hover,
-QDialog QSpinBox::down-button:hover, QDialog QDoubleSpinBox::down-button:hover, QDialog QDateEdit::down-button:hover {
+QDialog QSpinBox::up-button:hover,
+QDialog QDoubleSpinBox::up-button:hover {
     background-color: #313244;
 }
 
-QDialog QSpinBox::up-arrow, QDialog QDoubleSpinBox::up-arrow, QDialog QDateEdit::up-arrow {
-    image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'><path fill='%23cdd6f4' d='M7 14l5-5 5 5'/></svg>");
+QDialog QSpinBox::up-button:pressed,
+QDialog QDoubleSpinBox::up-button:pressed {
+    background-color: #45475a;
 }
 
-QDialog QSpinBox::down-arrow, QDialog QDoubleSpinBox::down-arrow, QDialog QDateEdit::down-arrow {
-    image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'><path fill='%23cdd6f4' d='M7 10l5 5 5-5'/></svg>");
+/* Butonul jos (↓) pentru SpinBox */
+QDialog QSpinBox::down-button,
+QDialog QDoubleSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+    width: 20px;
+    border-left: 1px solid #313244;
+    border-top: 1px solid #313244;
+    border-bottom-right-radius: 9px;
+    background-color: #252538;
 }
 
+QDialog QSpinBox::down-button:hover,
+QDialog QDoubleSpinBox::down-button:hover {
+    background-color: #313244;
+}
+
+QDialog QSpinBox::down-button:pressed,
+QDialog QDoubleSpinBox::down-button:pressed {
+    background-color: #45475a;
+}
+
+/* Săgețile SpinBox */
+QDialog QSpinBox::up-arrow,
+QDialog QDoubleSpinBox::up-arrow {
+    image: url(:/styles/icons/arrow_up.svg);
+    width: 8px;
+    height: 8px;
+}
+
+QDialog QSpinBox::down-arrow,
+QDialog QDoubleSpinBox::down-arrow {
+    image: url(:/styles/icons/arrow_down.svg);
+    width: 8px;
+    height: 8px;
+}
+
+/* Butonul drop-down pentru QDateEdit */
+QDialog QDateEdit::drop-down {
+    subcontrol-origin: border;
+    subcontrol-position: center right;
+    width: 28px;
+    border-left: 1px solid #313244;
+    border-top-right-radius: 9px;
+    border-bottom-right-radius: 9px;
+    background-color: #252538;
+}
+
+QDialog QDateEdit::drop-down:hover {
+    background-color: #313244;
+}
+
+QDialog QDateEdit::down-arrow {
+    image: url(:/styles/icons/arrow_down.svg);
+    width: 8px;
+    height: 8px;
+}
+
+/* --- CARDURI ȘI CHENARE FEREASTRĂ PRINCIPALĂ --- */
 QFrame#metricCard, QFrame#tablePanel, QFrame#detailsContainer {
     background-color: #181825; 
     border: 1px solid #313244; 
@@ -138,8 +192,8 @@ QLabel#metricValue {
     color: #89b4fa; 
 }
             
-/* Inputs de Bază (Main Window) */
-QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QPlainTextEdit {
+/* Inputs de Bază (Main Window) — fără SpinBox/DateEdit, stilizate doar prin QDialog */
+QLineEdit, QComboBox, QPlainTextEdit {
     background-color: #181825; 
     color: #cdd6f4; 
     border: 1px solid #313244; 
@@ -148,7 +202,7 @@ QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QPlainTextEdit {
     selection-background-color: #89b4fa;
 }
 
-QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus, QDateEdit:focus, QPlainTextEdit:focus { 
+QLineEdit:focus, QComboBox:focus, QPlainTextEdit:focus { 
     border: 1px solid #89b4fa; 
     background-color: #1e1e2e;
 }
@@ -170,7 +224,6 @@ QComboBox QAbstractItemView {
     padding: 4px;
 }
 
-/* Stilizarea fiecărui rând din listă */
 QComboBox QAbstractItemView::item {
     min-height: 28px;
     border-radius: 4px;
@@ -193,7 +246,7 @@ QAbstractItemView::container {
     background-color: transparent;
 }
             
-/* --- BUTOANE STYLE 2026 (Pill, Glow, Gradient) --- */
+/* --- BUTOANE STYLE 2026 --- */
 QPushButton {
     background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #313244, stop:1 #181825);
     color: #cdd6f4; 
@@ -213,15 +266,16 @@ QPushButton:pressed {
     background-color: #11111b; 
 }
             
+/* --- Butonul Primar (Dacă este folosit în restul ferestrei) --- */
 QPushButton#primaryButton { 
-    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #89b4fa, stop:1 #a6e3a1);
-    color: #11111b; 
+    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #3b82f6, stop:1 #10b981);
+    color: #ffffff; 
     border: none; 
     min-width: 80px;
 }
 
 QPushButton#primaryButton:hover { 
-    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4befe, stop:1 #94e2d5);
+    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #60a5fa, stop:1 #34d399);
 }
             
 /* Tabel */
@@ -285,7 +339,7 @@ QMenu::item:selected {
     border-radius: 4px; 
 }
             
-/* Toolbar Pill Buttons */
+/* Toolbar */
 QToolBar { 
     background-color: #1e1e2e; 
     border-bottom: 1px solid #313244; 
