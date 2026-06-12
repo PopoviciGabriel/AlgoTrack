@@ -114,7 +114,9 @@ protected:
 
         int xOffset = 0;
         int yOffset = 26;
-        painter.setPen(isDark ? QColor(205, 214, 244) : QColor(100, 116, 139));
+
+        // Culoarea textului "Activity (Last 4 months)"
+        painter.setPen(isDark ? QColor("#cdd6f4") : QColor("#64748b"));
         QFont font = painter.font();
         font.setPointSize(9);
         font.setBold(true);
@@ -131,13 +133,17 @@ protected:
 
                 int count = counts.value(d.toString("dd-MM-yyyy"), 0);
 
-                QColor color = isDark ? QColor(88, 91, 112) : QColor(235, 237, 240);
+                // --- CULORILE VIBRANTE (HEX) ASORTATE CU PIE CHART ---
+                // Nivel 0 (Nicio problemă rezolvată)
+                QColor color = isDark ? QColor("#313244") : QColor("#ebedf0");
+
                 if (count == 1)
-                    color = isDark ? QColor(14, 68, 41) : QColor(155, 233, 168);
+                    color = QColor("#00b8a3"); // Nivel 1 -> Teal (culoarea pentru Easy)
                 else if (count == 2)
-                    color = isDark ? QColor(0, 109, 50) : QColor(64, 196, 99);
+                    color = QColor("#ffc01e"); // Nivel 2 -> Galben (culoarea pentru Medium)
                 else if (count >= 3)
-                    color = isDark ? QColor(38, 166, 65) : QColor(33, 110, 57);
+                    color = QColor("#ff375f"); // Nivel 3+ -> Roșu/Roz (culoarea pentru Hard)
+                // -----------------------------------------------------
 
                 painter.setBrush(color);
                 painter.setPen(Qt::NoPen);
@@ -549,17 +555,18 @@ void MainWindow::updateThemeStyles()
             ui->pieChartView->chart()->setBackgroundBrush(Qt::transparent);
             if (ui->pieSeries->slices().size() >= 3)
             {
-                ui->pieSeries->slices().at(0)->setBrush(QColor(166, 227, 161));
-                ui->pieSeries->slices().at(1)->setBrush(QColor(249, 226, 175));
-                ui->pieSeries->slices().at(2)->setBrush(QColor(243, 139, 168));
+                // Culori cu contrast puternic pentru Dark Mode
+                ui->pieSeries->slices().at(0)->setBrush(QColor("#00b8a3")); // Easy
+                ui->pieSeries->slices().at(1)->setBrush(QColor("#ffc01e")); // Medium
+                ui->pieSeries->slices().at(2)->setBrush(QColor("#ff375f")); // Hard
                 for (auto *slice : ui->pieSeries->slices())
                 {
-                    slice->setBorderColor(QColor(30, 30, 46));
+                    slice->setBorderColor(QColor("#1e1e2e")); // Fundalul containerului de statistici din dark.qss
                     slice->setBorderWidth(2);
                 }
             }
-            ui->pieChartView->chart()->setTitleBrush(QColor(205, 214, 244));
-            ui->pieChartView->chart()->legend()->setLabelColor(QColor(186, 194, 222));
+            ui->pieChartView->chart()->setTitleBrush(QColor("#cdd6f4"));
+            ui->pieChartView->chart()->legend()->setLabelColor(QColor("#bac2de"));
         }
         else
         {
@@ -567,17 +574,18 @@ void MainWindow::updateThemeStyles()
             ui->pieChartView->chart()->setBackgroundBrush(Qt::transparent);
             if (ui->pieSeries->slices().size() >= 3)
             {
-                ui->pieSeries->slices().at(0)->setBrush(QColor(34, 197, 94));
-                ui->pieSeries->slices().at(1)->setBrush(QColor(234, 179, 8));
-                ui->pieSeries->slices().at(2)->setBrush(QColor(239, 68, 68));
+                // Aceleași culori cu contrast puternic pentru Light Mode
+                ui->pieSeries->slices().at(0)->setBrush(QColor("#00b8a3")); // Easy
+                ui->pieSeries->slices().at(1)->setBrush(QColor("#ffc01e")); // Medium
+                ui->pieSeries->slices().at(2)->setBrush(QColor("#ff375f")); // Hard
                 for (auto *slice : ui->pieSeries->slices())
                 {
-                    slice->setBorderColor(QColor(255, 255, 255));
+                    slice->setBorderColor(QColor("#f8fafc")); // Fundalul containerului de statistici din light.qss
                     slice->setBorderWidth(2);
                 }
             }
-            ui->pieChartView->chart()->setTitleBrush(QColor(15, 23, 42));
-            ui->pieChartView->chart()->legend()->setLabelColor(QColor(71, 85, 105));
+            ui->pieChartView->chart()->setTitleBrush(QColor("#0f172a"));
+            ui->pieChartView->chart()->legend()->setLabelColor(QColor("#64748b"));
         }
     }
 
