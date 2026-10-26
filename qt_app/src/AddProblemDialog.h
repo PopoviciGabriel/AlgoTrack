@@ -25,8 +25,8 @@ public:
 
     using unique_ptr = std::unique_ptr<AddProblemDialog, deleter>;
 
-    // Factory Method
-    static unique_ptr create(QWidget *parent = nullptr);
+    static unique_ptr create(QWidget *parent = nullptr, int presetTimeMinutes = -1);
+    static unique_ptr edit(const Problem &existing, QWidget *parent = nullptr);
 };
 
 #endif // ALGOTRACK_ADD_PROBLEM_DIALOG_H

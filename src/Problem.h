@@ -82,6 +82,15 @@ class Problem
     ProblemDate date;
     ProblemRating rating;
     std::string notes;
+    std::string id;
+    std::string problemUrl;
+    std::string solutionPath;
+    std::string timeComplexity;
+    std::string spaceComplexity;
+    std::string dueDate;
+    int intervalDays = 0;
+    double stability = 1.0;
+    int repetitionCount = 0;
     std::vector<std::string> m_cachedTags;
 
     void setName(const std::string &newName);
@@ -93,14 +102,21 @@ class Problem
     void setDate(const std::string &newDate);
     void setRating(double newRating);
     void setNotes(const std::string &newNotes);
+    void assignTracking(std::string newId, std::string url, std::string path,
+                        std::string due, int interval, double stab, int reps);
 
 public:
     Problem();
     
-    // Interfață compatibilă cu primitivele la granița dialogului/sistemului
+    // Interfață compatibilă cu primitivele la granița dialogului/sistemului.
+    // Id gol primește un identificator nou. dueDate gol înseamnă azi.
     Problem(std::string name, std::string platform, Difficulty difficulty,
             std::vector<std::string> tags, Status status,
-            int timeSpent, std::string date, double rating, std::string notes);
+            int timeSpent, std::string date, double rating, std::string notes,
+            std::string problemUrl = "", std::string solutionPath = "",
+            std::string id = "", std::string dueDate = "",
+            int intervalDays = 0, double stability = 1.0, int repetitionCount = 0,
+            std::string timeComplexity = "", std::string spaceComplexity = "");
 
     // Constructor cu tipuri puternice pure
     Problem(ProblemName name, Platform platform, Difficulty difficulty,
@@ -109,6 +125,10 @@ public:
 
     void changeStatus(const Status &newStatus);
     void changeNotes(const std::string &newNotes);
+    void adoptId(const std::string &stableId);
+    void applyReview(ReviewRating rating, const std::string &todayIso);
+    // Revizuire rapidă: due = azi + 3/7/14 zile pentru Hard/Medium/Easy.
+    void applySpacedReview(const std::string &todayIso);
 
     const std::string &getName() const;
     const std::string &getPlatform() const;
@@ -119,6 +139,15 @@ public:
     const std::string &getDate() const;
     double getRating() const;
     const std::string &getNotes() const;
+    const std::string &getId() const;
+    const std::string &getProblemUrl() const;
+    const std::string &getSolutionPath() const;
+    const std::string &getTimeComplexity() const;
+    const std::string &getSpaceComplexity() const;
+    const std::string &getDueDate() const;
+    int getIntervalDays() const;
+    double getStability() const;
+    int getRepetitionCount() const;
 
     std::string toCSV() const;
     void fromCSV(const std::string &line);

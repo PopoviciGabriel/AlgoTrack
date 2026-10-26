@@ -43,9 +43,18 @@ void printStats(const ProblemManager &manager)
         else
             hard++;
 
-        dateCounts[p.getDate()]++;
+        if (p.getStatus() == Status::Solved)
+            dateCounts[p.getDate()]++;
         totalTime += p.getTimeSpent();
         ratingSum += p.getRating();
+    }
+
+    const std::string today = todayIsoDate();
+    int dueToday = 0;
+    for (const auto &p : problems)
+    {
+        if (p.getDueDate() <= today)
+            dueToday++;
     }
 
     std::cout << "solved:" << solved << "\n";
@@ -54,13 +63,14 @@ void printStats(const ProblemManager &manager)
     std::cout << "total_time:" << totalTime << "\n";
     if (!problems.empty())
     {
-        std::cout << "avg_rating:" << (ratingSum / problems.size()) << "\n";
+        std::cout << "avg_rating:" << formatCsvDouble(ratingSum / problems.size(), 2) << "\n";
         std::cout << "avg_time:" << (totalTime / problems.size()) << "\n";
     }
 
     std::cout << "diff_easy:" << easy << "\n";
     std::cout << "diff_medium:" << medium << "\n";
     std::cout << "diff_hard:" << hard << "\n";
+    std::cout << "due_today:" << dueToday << "\n";
 
     for (auto const &[dateStr, count] : dateCounts)
     {
@@ -79,9 +89,7 @@ int main()
         loadResult = ProblemRepository::loadFromFile("qt_app/data/problems.csv");
     }
     if (loadResult.fileOpened)
-    {
         manager.setProblems(loadResult.problems);
-    }
 
     std::cout << "READY\n";
 
@@ -138,6 +146,102 @@ int main()
             }
             else
                 std::cout << "ERROR: Invalid index\n";
+        }
+        else if (command == "DELETE_ID")
+        {
+            std::string id;
+            if (ss >> id && manager.deleteById(id))
+            {
+                autoSave(manager);
+                std::cout << "SUCCESS: DELETED\n";
+            }
+            else
+                std::cout << "ERROR: Unknown problem\n";
+        }
+        else if (command == "EDIT_ID")
+        {
+            std::string id;
+            std::string csv;
+            ss >> id;
+            std::getline(ss, csv);
+            try
+            {
+                Problem updated;
+                updated.fromCSV(trim(csv));
+                bool known = false;
+                for (const auto &existing : manager.getAllProblems())
+                {
+                    if (existing.getId() == id)
+                    {
+                        known = true;
+                        break;
+                    }
+                }
+                if (!known)
+                    std::cout << "ERROR: Unknown problem\n";
+                else if (manager.editById(id, updated))
+                {
+                    autoSave(manager);
+                    std::cout << "SUCCESS: EDITED\n";
+                }
+                else
+                    std::cout << "ERROR: Duplicate problem\n";
+            }
+            catch (...)
+            {
+                std::cout << "ERROR: Invalid CSV format\n";
+            }
+        }
+        else if (command == "MARK_REVIEWED")
+        {
+            std::string id;
+            if (!(ss >> id))
+                std::cout << "ERROR: Invalid review\n";
+            else
+            {
+                bool known = false;
+                for (const auto &existing : manager.getAllProblems())
+                {
+                    if (existing.getId() == id)
+                    {
+                        known = true;
+                        break;
+                    }
+                }
+                if (!known)
+                    std::cout << "ERROR: Unknown problem\n";
+                else if (manager.markReviewedById(id))
+                {
+                    autoSave(manager);
+                    std::cout << "SUCCESS: REVIEWED\n";
+                }
+                else
+                    std::cout << "ERROR: Problem is not due\n";
+            }
+        }
+        else if (command == "REVIEW")
+        {
+            std::string id;
+            int ratingValue = 0;
+            if (!(ss >> id >> ratingValue) || ratingValue < 1 || ratingValue > 4)
+            {
+                std::cout << "ERROR: Invalid review\n";
+            }
+            else if (manager.reviewById(id, static_cast<ReviewRating>(ratingValue)))
+            {
+                autoSave(manager);
+                std::cout << "SUCCESS: REVIEWED\n";
+            }
+            else
+                std::cout << "ERROR: Unknown problem\n";
+        }
+        else if (command == "DUE")
+        {
+            const std::vector<Problem> due = manager.dueOnOrBefore(todayIsoDate());
+            std::cout << "START_LIST\n";
+            for (const auto &p : due)
+                std::cout << p.toCSV() << "\n";
+            std::cout << "END_LIST\n";
         }
         else if (command == "SEARCH")
         {
@@ -221,6 +325,15 @@ int main()
                 std::cout << "SUCCESS: EXPORTED\n";
             else
                 std::cout << "ERROR: Export failed\n";
+        }
+        else if (command == "EXPORT_MD")
+        {
+            std::string path;
+            std::getline(ss, path);
+            if (ProblemRepository::exportMarkdown(trim(path), manager.getAllProblems()))
+                std::cout << "SUCCESS: EXPORTED_MD\n";
+            else
+                std::cout << "ERROR: Markdown export failed\n";
         }
         else
             std::cout << "ERROR: UNKNOWN_COMMAND\n";

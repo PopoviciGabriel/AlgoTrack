@@ -1,6 +1,13 @@
 #include "Utils.h"
 #include <algorithm>
+#include <charconv>
+#include <chrono>
 #include <iostream>
+#include <iomanip>
+#include <locale>
+#include <sstream>
+#include <stdexcept>
+#include <system_error>
 #include <vector>
 #include <cctype>
 
@@ -117,6 +124,42 @@ bool isValidDateFormat(const std::string& s) {
     return true;
 }
 
+bool isValidIsoDate(const std::string &s)
+{
+    if (s.size() != 10 || s[4] != '-' || s[7] != '-')
+        return false;
+    return isValidDateFormat(s.substr(8, 2) + "-" + s.substr(5, 2) + "-" + s.substr(0, 4));
+}
+
+static std::string formatIso(std::chrono::year_month_day ymd)
+{
+    std::ostringstream out;
+    out << std::setfill('0')
+        << std::setw(4) << static_cast<int>(ymd.year()) << '-'
+        << std::setw(2) << static_cast<unsigned>(ymd.month()) << '-'
+        << std::setw(2) << static_cast<unsigned>(ymd.day());
+    return out.str();
+}
+
+std::string todayIsoDate()
+{
+    const auto today = std::chrono::floor<std::chrono::days>(std::chrono::system_clock::now());
+    return formatIso(std::chrono::year_month_day{today});
+}
+
+std::string addDaysToIsoDate(const std::string &isoDate, int days)
+{
+    if (!isValidIsoDate(isoDate))
+        throw std::invalid_argument("Date must be YYYY-MM-DD.");
+    const int year = std::stoi(isoDate.substr(0, 4));
+    const unsigned month = static_cast<unsigned>(std::stoi(isoDate.substr(5, 2)));
+    const unsigned day = static_cast<unsigned>(std::stoi(isoDate.substr(8, 2)));
+    const std::chrono::year_month_day ymd =
+        std::chrono::year{year} / std::chrono::month{month} / std::chrono::day{day};
+    const std::chrono::sys_days shifted = std::chrono::sys_days{ymd} + std::chrono::days{days};
+    return formatIso(std::chrono::year_month_day{shifted});
+}
+
 std::string difficultyToString(Difficulty d) {
     switch (d) {
     case Difficulty::Easy: return "Easy";
@@ -224,4 +267,34 @@ std::vector<std::string> parseCSVLine(const std::string& line) {
 
     fields.push_back(current);
     return fields;
+}
+
+std::string formatCsvDouble(double value, int decimals)
+{
+    if (decimals < 0)
+        decimals = 0;
+    std::ostringstream out;
+    out.imbue(std::locale::classic());
+    out << std::fixed << std::setprecision(decimals) << value;
+    return out.str();
+}
+
+double parseCsvDouble(const std::string &text)
+{
+    std::string normalized = trim(text);
+    for (char &c : normalized)
+    {
+        if (c == ',')
+            c = '.';
+    }
+    if (normalized.empty())
+        throw std::runtime_error("Invalid numeric value in CSV.");
+
+    double value = 0.0;
+    const char *first = normalized.data();
+    const char *last = first + normalized.size();
+    const std::from_chars_result parsed = std::from_chars(first, last, value);
+    if (parsed.ec != std::errc() || parsed.ptr != last)
+        throw std::runtime_error("Invalid numeric value in CSV.");
+    return value;
 }

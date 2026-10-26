@@ -4,9 +4,6 @@
 #include <string>
 #include <vector>
 #include "Problem.h"
-#include <string>
-#include <vector>
-#include "Problem.h"
 
 struct LoadResult
 {
@@ -33,6 +30,7 @@ public:
 
     static ImportResult importFromFile(const std::string &filename, std::vector<Problem> &problems);
     static bool exportToFile(const std::string &filename, const std::vector<Problem> &problems);
+    static bool exportMarkdown(const std::string &filename, const std::vector<Problem> &problems);
 };
 
 #endif // ALGOTRACK_PROBLEM_REPOSITORY_H

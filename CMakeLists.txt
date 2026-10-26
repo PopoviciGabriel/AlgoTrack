@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.15)
 project(AlgoTrack)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(MSVC)
-    add_compile_options(/Zc:__cplusplus /permissive-)
+    add_compile_options(/Zc:__cplusplus /permissive- /utf-8)
 endif()
 
 add_library(LibAlgoTrack STATIC
@@ -17,6 +17,7 @@ add_library(LibAlgoTrack STATIC
     src/Fuzzy.cpp
     src/Utils.cpp
     src/QueryParser.cpp
+    src/Fsrs.cpp
 )
 
 target_include_directories(LibAlgoTrack PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)

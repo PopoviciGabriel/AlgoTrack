@@ -1,11 +1,24 @@
-QPlainTextEdit#notesEdit {
-    min-height: 50px;
-    max-height: 60px;
-    max-width: 400px;
-    margin-bottom: 16px;
+/* Shared dialog chrome. Colors live in dark.qss / light.qss. */
+
+QDialog QComboBox {
+    combobox-popup: 0;
 }
 
-/* Săgețile SpinBox (SVG-urile sunt aceleași și pe light și pe dark) */
+QDialog QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    width: 28px;
+    border: none;
+    background: transparent;
+}
+
+QDialog QComboBox::down-arrow,
+QDialog QDateEdit::down-arrow {
+    image: url(:/styles/icons/arrow_down.svg);
+    width: 8px;
+    height: 8px;
+}
+
 QDialog QSpinBox::up-arrow,
 QDialog QDoubleSpinBox::up-arrow {
     image: url(:/styles/icons/arrow_up.svg);
@@ -15,12 +28,6 @@ QDialog QDoubleSpinBox::up-arrow {
 
 QDialog QSpinBox::down-arrow,
 QDialog QDoubleSpinBox::down-arrow {
-    image: url(:/styles/icons/arrow_down.svg);
-    width: 8px;
-    height: 8px;
-}
-
-QDialog QDateEdit::down-arrow {
     image: url(:/styles/icons/arrow_down.svg);
     width: 8px;
     height: 8px;

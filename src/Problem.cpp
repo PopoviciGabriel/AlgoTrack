@@ -1,5 +1,9 @@
 #include "Problem.h"
+#include "Fsrs.h"
 #include "Utils.h"
+#include <atomic>
+#include <chrono>
+#include <random>
 #include <sstream>
 #include <vector>
 #include <string>
@@ -76,6 +80,48 @@ ProblemRating::ProblemRating() : m_value(1.0) {}
 ProblemRating::ProblemRating(double rating) : m_value(validate(rating)) {}
 double ProblemRating::asDouble() const { return m_value; }
 
+namespace
+{
+std::string generateProblemId()
+{
+    static std::atomic<uint64_t> sequence{1};
+    const auto ticks = static_cast<uint64_t>(
+        std::chrono::steady_clock::now().time_since_epoch().count());
+    std::random_device device;
+    uint64_t id = (ticks << 16) ^ (sequence.fetch_add(1, std::memory_order_relaxed) << 48) ^
+                  (static_cast<uint64_t>(device()) << 32);
+    if (id == 0)
+        id = 1;
+    return std::to_string(id);
+}
+}
+
+void Problem::assignTracking(std::string newId, std::string url, std::string path,
+                             std::string due, int interval, double stab, int reps)
+{
+    problemUrl = trim(url);
+    solutionPath = trim(path);
+    id = trim(newId);
+    if (id.empty())
+        id = generateProblemId();
+    if (interval < 0)
+        throw std::invalid_argument("Interval cannot be negative.");
+    if (!(stab > 0.0))
+        throw std::invalid_argument("Stability must be positive.");
+    if (reps < 0)
+        throw std::invalid_argument("Repetition count cannot be negative.");
+    intervalDays = interval;
+    stability = stab;
+    repetitionCount = reps;
+    due = trim(due);
+    if (due.empty())
+        dueDate = todayIsoDate();
+    else if (!isValidIsoDate(due))
+        throw std::invalid_argument("Due date must be YYYY-MM-DD.");
+    else
+        dueDate = due;
+}
+
 // =========================================================
 // IMPLEMENTARE CLASĂ DOMENIU (PROBLEM)
 // =========================================================
@@ -88,13 +134,21 @@ Problem::Problem()
       timeSpent(),
       date(),
       rating(),
-      notes("")
+      notes(""),
+      intervalDays(0),
+      stability(1.0),
+      repetitionCount(0)
 {
+    assignTracking("", "", "", "", 0, 1.0, 0);
 }
 
 Problem::Problem(std::string name, std::string platform, Difficulty difficulty,
                  std::vector<std::string> tags, Status status,
-                 int timeSpent, std::string date, double rating, std::string notes)
+                 int timeSpent, std::string date, double rating, std::string notes,
+                 std::string problemUrl, std::string solutionPath,
+                 std::string id, std::string dueDate,
+                 int intervalDays, double stability, int repetitionCount,
+                 std::string timeComplexity, std::string spaceComplexity)
     : name(name),
       platform(platform),
       difficulty(difficulty),
@@ -102,7 +156,9 @@ Problem::Problem(std::string name, std::string platform, Difficulty difficulty,
       timeSpent(timeSpent),
       date(date),
       rating(rating),
-      notes(notes)
+      notes(notes),
+      timeComplexity(trim(timeComplexity)),
+      spaceComplexity(trim(spaceComplexity))
 {
     if (tags.empty())
         throw std::invalid_argument("At least one tag is required.");
@@ -112,6 +168,8 @@ Problem::Problem(std::string name, std::string platform, Difficulty difficulty,
         this->tags.push_back(Tag(rawTag));
     }
     m_cachedTags = std::move(tags);
+    assignTracking(std::move(id), std::move(problemUrl), std::move(solutionPath),
+                   std::move(dueDate), intervalDays, stability, repetitionCount);
 }
 
 Problem::Problem(ProblemName name, Platform platform, Difficulty difficulty,
@@ -135,6 +193,7 @@ Problem::Problem(ProblemName name, Platform platform, Difficulty difficulty,
     {
         m_cachedTags.push_back(t.asString());
     }
+    assignTracking("", "", "", "", 0, 1.0, 0);
 }
 
 void Problem::changeStatus(const Status &newStatus)
@@ -147,6 +206,42 @@ void Problem::changeNotes(const std::string &newNotes)
     notes = newNotes;
 }
 
+void Problem::adoptId(const std::string &stableId)
+{
+    const std::string cleaned = trim(stableId);
+    if (cleaned.empty())
+        throw std::invalid_argument("Id cannot be empty.");
+    id = cleaned;
+}
+
+void Problem::applyReview(ReviewRating rating, const std::string &todayIso)
+{
+    const ReviewState next = scheduleReview(
+        ReviewState{stability, intervalDays, repetitionCount, dueDate}, rating, todayIso);
+    stability = next.stability;
+    intervalDays = next.intervalDays;
+    repetitionCount = next.repetitionCount;
+    dueDate = next.dueDate;
+}
+
+void Problem::applySpacedReview(const std::string &todayIso)
+{
+    if (!isValidIsoDate(todayIso))
+        throw std::invalid_argument("Review date must be YYYY-MM-DD.");
+
+    int days = 14;
+    if (difficulty == Difficulty::Hard)
+        days = 3;
+    else if (difficulty == Difficulty::Medium)
+        days = 7;
+
+    intervalDays = days;
+    dueDate = addDaysToIsoDate(todayIso, days);
+    if (repetitionCount < 0)
+        repetitionCount = 0;
+    ++repetitionCount;
+}
+
 const std::string &Problem::getName() const { return name.asString(); }
 const std::string &Problem::getPlatform() const { return platform.asString(); }
 Difficulty Problem::getDifficulty() const { return difficulty; }
@@ -156,6 +251,15 @@ int Problem::getTimeSpent() const { return timeSpent.asInt(); }
 const std::string &Problem::getDate() const { return date.asString(); }
 double Problem::getRating() const { return rating.asDouble(); }
 const std::string &Problem::getNotes() const { return notes; }
+const std::string &Problem::getId() const { return id; }
+const std::string &Problem::getProblemUrl() const { return problemUrl; }
+const std::string &Problem::getSolutionPath() const { return solutionPath; }
+const std::string &Problem::getTimeComplexity() const { return timeComplexity; }
+const std::string &Problem::getSpaceComplexity() const { return spaceComplexity; }
+const std::string &Problem::getDueDate() const { return dueDate; }
+int Problem::getIntervalDays() const { return intervalDays; }
+double Problem::getStability() const { return stability; }
+int Problem::getRepetitionCount() const { return repetitionCount; }
 
 std::string Problem::toCSV() const
 {
@@ -174,14 +278,28 @@ std::string Problem::toCSV() const
            escapeCSVField(statusToCSV(status)) + "," +
            escapeCSVField(std::to_string(timeSpent.asInt())) + "," +
            escapeCSVField(date.asString()) + "," +
-           escapeCSVField(std::to_string(rating.asDouble())) + "," +
-           escapeCSVField(notes);
+           escapeCSVField(formatCsvDouble(rating.asDouble(), 1)) + "," +
+           escapeCSVField(notes) + "," +
+           escapeCSVField(id) + "," +
+           escapeCSVField(problemUrl) + "," +
+           escapeCSVField(solutionPath) + "," +
+           escapeCSVField(dueDate) + "," +
+           escapeCSVField(std::to_string(intervalDays)) + "," +
+           escapeCSVField(formatCsvDouble(stability, 6)) + "," +
+           escapeCSVField(std::to_string(repetitionCount)) + "," +
+           escapeCSVField(timeComplexity) + "," +
+           escapeCSVField(spaceComplexity);
 }
 
 void Problem::fromCSV(const std::string &line)
 {
-    std::vector<std::string> fields = parseCSVLine(line);
-    if (fields.size() != 9)
+    std::string normalized = line;
+    if (!normalized.empty() && normalized.back() == '\r')
+        normalized.pop_back();
+    std::vector<std::string> fields = parseCSVLine(normalized);
+    // 9: formatul inițial. 16: tracking FSRS. 17+: complexitate opțională (și câmpuri viitoare ignorate).
+    const bool legacy = fields.size() == 9;
+    if (!legacy && fields.size() < 16)
         throw std::runtime_error("Invalid CSV line.");
 
     ProblemName parsedName(fields[0]);
@@ -212,7 +330,7 @@ void Problem::fromCSV(const std::string &line)
     try
     {
         rawTimeSpent = std::stoi(fields[5]);
-        rawRating = std::stod(fields[7]);
+        rawRating = parseCsvDouble(fields[7]);
     }
     catch (...)
     {
@@ -233,6 +351,36 @@ void Problem::fromCSV(const std::string &line)
     date = std::move(parsedDate);
     rating = parsedRating;
     notes = fields[8];
+
+    if (legacy)
+    {
+        timeComplexity.clear();
+        spaceComplexity.clear();
+        assignTracking("", "", "", todayIsoDate(), 0, 1.0, 0);
+        return;
+    }
+
+    int parsedInterval = 0;
+    double parsedStability = 1.0;
+    int parsedReps = 0;
+    try
+    {
+        parsedInterval = std::stoi(fields[13]);
+        parsedStability = parseCsvDouble(fields[14]);
+        parsedReps = std::stoi(fields[15]);
+    }
+    catch (...)
+    {
+        throw std::runtime_error("Invalid schedule value in CSV.");
+    }
+    assignTracking(fields[9], fields[10], fields[11], fields[12],
+                   parsedInterval, parsedStability, parsedReps);
+    timeComplexity.clear();
+    spaceComplexity.clear();
+    if (fields.size() > 16)
+        timeComplexity = trim(fields[16]);
+    if (fields.size() > 17)
+        spaceComplexity = trim(fields[17]);
 }
 
 void Problem::setName(const std::string &newName) { name = ProblemName(newName); }

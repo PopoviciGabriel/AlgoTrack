@@ -66,6 +66,72 @@ bool ProblemManager::deleteAtIndex(int index)
     return true;
 }
 
+bool ProblemManager::deleteById(const std::string &id)
+{
+    const auto it = std::find_if(problems.begin(), problems.end(), [&](const Problem &problem)
+                                 { return problem.getId() == id; });
+    if (it == problems.end())
+        return false;
+    problems.erase(it);
+    return true;
+}
+
+bool ProblemManager::editById(const std::string &id, const Problem &updated)
+{
+    auto it = std::find_if(problems.begin(), problems.end(), [&](const Problem &problem)
+                           { return problem.getId() == id; });
+    if (it == problems.end())
+        return false;
+
+    for (const auto &other : problems)
+    {
+        if (other.getId() == id)
+            continue;
+        if (toLowerCase(other.getName()) == toLowerCase(updated.getName()) &&
+            toLowerCase(other.getPlatform()) == toLowerCase(updated.getPlatform()))
+            return false;
+    }
+
+    Problem stored = updated;
+    stored.adoptId(id);
+    *it = std::move(stored);
+    return true;
+}
+
+bool ProblemManager::reviewById(const std::string &id, ReviewRating rating)
+{
+    auto it = std::find_if(problems.begin(), problems.end(), [&](const Problem &problem)
+                           { return problem.getId() == id; });
+    if (it == problems.end())
+        return false;
+    it->applyReview(rating, todayIsoDate());
+    return true;
+}
+
+bool ProblemManager::markReviewedById(const std::string &id)
+{
+    auto it = std::find_if(problems.begin(), problems.end(), [&](const Problem &problem)
+                           { return problem.getId() == id; });
+    if (it == problems.end())
+        return false;
+    const std::string today = todayIsoDate();
+    if (it->getDueDate().empty() || it->getDueDate() > today)
+        return false;
+    it->applySpacedReview(today);
+    return true;
+}
+
+std::vector<Problem> ProblemManager::dueOnOrBefore(const std::string &todayIso) const
+{
+    std::vector<Problem> due;
+    for (const auto &problem : problems)
+    {
+        if (problem.getDueDate() <= todayIso)
+            due.push_back(problem);
+    }
+    return due;
+}
+
 std::vector<Problem> ProblemManager::filterByTag(const std::string &tag) const
 {
     std::vector<Problem> res;

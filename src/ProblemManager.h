@@ -33,6 +33,11 @@ public:
     std::vector<Problem> searchAdvanced(const std::string &query) const;
 
     bool deleteAtIndex(int index);
+    bool deleteById(const std::string &id);
+    bool editById(const std::string &id, const Problem &updated);
+    bool reviewById(const std::string &id, ReviewRating rating);
+    bool markReviewedById(const std::string &id);
+    std::vector<Problem> dueOnOrBefore(const std::string &todayIso) const;
 
     std::vector<Problem> filterByTag(const std::string &tag) const;
     std::vector<Problem> filterByPlatform(const std::string &platform) const;

@@ -9,6 +9,8 @@
 #include <variant>
 #include <memory>
 
+class QTimer;
+
 namespace IPC
 {
     struct Ready
@@ -81,7 +83,17 @@ private slots:
     void handleCliOutput();
     void addProblem();
     void deleteSelectedProblem();
+    void editSelectedProblem();
+    void showDueToday();
+    void reviewSelected(int rating);
+    void markSelectedReviewed();
+    void openSelectedProblemUrl();
+    void openSelectedSolution();
+    void togglePracticeTimer();
+    void resetPracticeTimer();
+    void updatePracticeReadout();
     void applySearch();
+    void clearSearchAndFilters();
     void sortByDifficulty();
     void sortByTime();
     void sortByRating();
@@ -90,6 +102,7 @@ private slots:
     void saveFileAs();
     void importFile();
     void exportFile();
+    void exportMarkdown();
     void toggleDarkMode(); // Comutatorul global
 
 private:
@@ -103,11 +116,23 @@ private:
     int statEasy = 0;
     int statMedium = 0;
     int statHard = 0;
+    int statSolved = 0;
+    int statTotal = 0;
     QMap<QString, int> statDates;
 
-    bool isDarkMode = false; // Starea temei
+    QTimer *practiceTimer = nullptr;
+    qint64 practiceElapsedMs = 0;
+    qint64 practiceAnchorMs = 0;
+    bool practiceRunning = false;
+    bool resetTimerAfterAdd = false;
+    qint64 currentPracticeMs() const;
+    int practiceMinutesForDialog() const;
+
+    bool isDarkMode = true; // Starea temei
+    bool showingDue = false;
 
     void sendCommandToCli(const QString &command);
+    void refreshLibrary();
     void processMessage(const IPC::Message &msg);
     void addCsvRowToTable(const QString &csv);
     void populateTableSingleRow(const QString &csv);
